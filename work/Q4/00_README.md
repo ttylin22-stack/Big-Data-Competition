@@ -26,22 +26,21 @@
 ## 二、目录结构
 
 ```
-问题4_交付包/
+Q4/
 ├── 00_README.md
-├── 01_报告/
-│   └── 问题4_分析报告.md
-├── 02_代码/
+├── 问题4_分析报告.md
+├── code/
 │   ├── config.py      路径配置
 │   ├── p4_sim.py      仿真主程序（能量线 + 质量守恒）
 │   └── p4_figs.py     三张出图
-├── 03_结果/
+├── result/
 │   ├── p4_result.npz  水深场、到达时间场、影响掩膜（7 MB）
 │   └── p4_along_path.csv
-├── 04_图表/
+├── image/
 │   ├── p4_fig1_inundation.png   淹没范围（走廊放大）
 │   ├── p4_fig2_arrival.png      到达时间场
 │   └── p4_fig3_along.png        沿程水深与宽度
-└── 05_输入/
+└── input/
     ├── p3_path.npy              沟道中心线（问题 3 产出）
     ├── p3_path_profile.csv      沿程高程
     └── p3_velocity_profile.csv  Voellmy 速度剖面
@@ -51,11 +50,15 @@
 
 ## 三、复现
 
-环境：Python 3.12，依赖 `numpy pandas rasterio scikit-learn matplotlib`。
+环境：Python 3.12，依赖 `numpy pandas rasterio scikit-learn matplotlib`
 
 ```bash
-python 02_代码/p4_sim.py    # 约 1 min（含填洼与 KDTree 查询）
-python 02_代码/p4_figs.py
+pip install numpy pandas rasterio scikit-learn matplotlib
+```
+
+```bash
+python code/p4_sim.py    # 约 1 min（含填洼与 KDTree 查询）
+python code/p4_figs.py
 ```
 
 ---
@@ -97,5 +100,5 @@ python 02_代码/p4_figs.py
 
 ## 七、与前序工作的关系
 
-- 沟道中心线与速度剖面来自 `问题2-3_交付包`（问题 3 的 Voellmy 模型），本包的到达时间与之严格一致；
+- 沟道中心线与速度剖面来自 `../Q3`（问题 3 的 Voellmy 模型，已复制到本包 `input/`），本包的到达时间与之严格一致；
 - 若修改问题 3 的 Voellmy 参数，需要重新导出 `p3_velocity_profile.csv` 并重跑本包。

@@ -23,25 +23,24 @@
 4. 绝对湿度（水汽密度）
 5. 风切变指数（边界层结构）
 
-完整推导见 `01_报告/问题1_分析报告.md`。
+完整推导见同级的 `问题1_分析报告.md`。
 
 ---
 
 ## 二、目录结构
 
 ```
-问题1_交付包/
+Q1/
 ├── 00_README.md              ← 本文件
-├── 01_报告/
-│   └── 问题1_分析报告.md      完整方法、结果表、局限
-├── 02_代码/
+├── 问题1_分析报告.md          完整方法、结果表、局限（由原报告目录上移而来）
+├── code/
 │   ├── config.py             统一路径（改这里就能换数据目录）
 │   ├── build_panel.py        逐小时 → 日尺度特征（1 951 天 × 58 指标）
 │   ├── analyze.py            事件窗口距平 + 代理标签 AUC + bootstrap
 │   ├── analyze2.py           共线性剔除、独立特征筛选
 │   ├── analyze3.py           Borda 综合排序（AUC + 距平 + 随机森林）
 │   └── figs.py               出 4 张图
-├── 03_结果/
+├── result/
 │   ├── daily_features.csv            主表，后续问题 2/3 直接用
 │   ├── case_crossover_ranking.csv    事件前 72 h 的标准化距平排序
 │   ├── borda_ranking.csv             综合排序全表（50 个特征）
@@ -49,30 +48,35 @@
 │   ├── rf_importance.csv             随机森林重要性
 │   ├── feature_final_table.csv       去共线后的独立特征表
 │   └── proxy_label_ranking_*.csv     代理标签单特征 AUC
-├── 04_图表/
+├── image/
 │   ├── fig1_temperature_lines.png    三条温度线
 │   ├── fig2_pdd.png                  热力峰值与 29 天滞后
 │   ├── fig3_top5_box.png             Top-5 事件窗对照
 │   └── fig4_borda.png                综合排序条形图
-└── 05_中间数据/
-    └── hourly_panel.csv.gz           合并后的逐小时面板（52 584 行）
+└── temporary/
+    ├── washed_and_merged_data.csv    合并清洗后的逐小时表（52 584 行 × 63 变量）
+    └── hourly_panel.csv              派生物理量后的逐小时面板（46 768 行）
 ```
 
 ---
 
 ## 三、怎么复现
 
-环境：Python 3.12；依赖 `numpy pandas scikit-learn matplotlib`。
+环境：Python 3.12；依赖 `numpy pandas scikit-learn matplotlib`
 
 ```bash
-python 02_代码/build_panel.py    # 生成 03_结果/daily_features.csv（约 15 秒）
-python 02_代码/analyze.py        # 事件距平 + 代理标签 + bootstrap
-python 02_代码/analyze2.py       # 共线剔除
-python 02_代码/analyze3.py       # Borda 排序
-python 02_代码/figs.py           # 出图到 04_图表/
+pip install numpy pandas scikit-learn matplotlib
 ```
 
-原始数据默认读 `赛道B/附件/`（由 `config.py` 相对定位）。若数据换了位置，只改 `02_代码/config.py` 里的 `BASE` 一行即可。
+```bash
+python code/build_panel.py    # 生成 result/daily_features.csv（约 15 秒）
+python code/analyze.py        # 事件距平 + 代理标签 + bootstrap
+python code/analyze2.py       # 共线剔除
+python code/analyze3.py       # Borda 排序
+python code/figs.py           # 出图到 image/
+```
+
+原始数据默认读 `resources/DataSet_1/`（由 `code/config.py` 以文件自身位置为基准相对定位）。若数据换了位置，只改 `code/config.py` 里的 `RESOURCES` 一行即可。
 
 ---
 
@@ -115,4 +119,4 @@ python 02_代码/figs.py           # 出图到 04_图表/
 - 日气温：ERA5-Land 日统计（Copernicus CDS），2005–2025，5 县
 - 事件与灾情：2026 年 MathorCup 赛道 B 题面
 
-> 开发过程中的中间版本仍在 `分析/问题1/`，以本交付包为准。
+> 本目录即最终版本；早期中间稿已废弃。

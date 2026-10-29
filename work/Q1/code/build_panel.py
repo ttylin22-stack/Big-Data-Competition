@@ -41,7 +41,7 @@ df = (met
 df = df.sort_values('t').reset_index(drop=True)
 print('合并后', df.shape, df['t'].min(), '→', df['t'].max())
 # 小时级原始表，存一份到temporary/便于查看
-df.to_csv(os.path.join(TMP, 'washed&merged_data.csv'), index=False, encoding='utf-8-sig')
+df.to_csv(os.path.join(TMP, 'washed_and_merged_data.csv'), index=False, encoding='utf-8-sig')
 print('原始合并表已存档 →', os.path.join(TMP, 'washed&merged_data.csv'), df.shape)
 
 
@@ -177,6 +177,7 @@ daily['T_source_anom_7d'] = daily['T_source_mean_anom'].rolling(7, min_periods=5
 daily['heatwave'] = (daily['T_source_anom_7d'] > 2).astype(int)
 daily['no_freeze_days_flag'] = (daily['T_source_min'] > 0).astype(int)
 
+#把处理后的SQL数据以csv表格形式落盘
 daily.to_csv(os.path.join(RESULT, 'daily_features.csv'), index=False, encoding='utf-8-sig')
 df.to_csv(os.path.join(TMP, 'hourly_panel.csv'), index=False, encoding='utf-8-sig')
 print('日表', daily.shape, '→', os.path.join(RESULT, 'daily_features.csv'))

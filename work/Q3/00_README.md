@@ -25,16 +25,15 @@
 ## 二、目录结构
 
 ```
-问题3_交付包/
+Q3/
 ├── 00_README.md
-├── 01_报告/
-│   └── 问题3_分析报告.md
-├── 02_代码/
+├── 问题3_分析报告.md
+├── code/
 │   ├── config.py        路径配置
 │   ├── p3_forecast.py   沟道提取 + Voellmy + 触发区间 + 覆盖率回测
 │   ├── voellmy.py       运移模型（含 μ 二分标定）
 │   └── p3_figs.py       四张图
-├── 03_结果/
+├── result/
 │   ├── p3_summary.csv             关键指标汇总
 │   ├── p3_coverage.csv            留一年外回测
 │   ├── p3_trigger_ensemble.csv    3000 次触发时刻集合
@@ -42,12 +41,12 @@
 │   ├── p3_path_profile.csv        沟道纵剖面
 │   ├── p3_velocity_profile.csv    Voellmy 速度剖面
 │   └── p3_path.npy                沟道中心线（栅格行列号）
-├── 04_图表/
+├── image/
 │   ├── p3_fig1_trigger_ci.png
 │   ├── p3_fig2_coverage.png
 │   ├── p3_fig3_profile.png
 │   └── p3_fig4_travel.png
-└── 05_输入/
+└── input/
     └── daily_features.csv  问题 1 的日尺度特征表
 ```
 
@@ -55,14 +54,18 @@
 
 ## 三、复现
 
-环境：Python 3.12，依赖 `numpy pandas scikit-learn matplotlib rasterio`。
+环境：Python 3.12，依赖 `numpy pandas scikit-learn matplotlib rasterio`
 
 ```bash
-python 02_代码/p3_forecast.py   # 约 2 分钟（含填洼与两次蒙特卡洛）
-python 02_代码/p3_figs.py
+pip install numpy pandas scikit-learn matplotlib rasterio
 ```
 
-原始数据默认读 `赛道B/附件/`（DEM）。
+```bash
+python code/p3_forecast.py   # 约 2 分钟（含填洼与两次蒙特卡洛）
+python code/p3_figs.py
+```
+
+原始数据默认读 `resources/DataSet_7/DEM.tif`（由 `code/config.py` 的 `RESOURCES` 相对定位）。
 
 ---
 
@@ -104,5 +107,5 @@ Voellmy: a = g sinθ − μ g cosθ − g v²/(ξ h)
 
 ## 六、与其他包的关系
 
-- 输入 `daily_features.csv` 来自 `问题1_交付包`。
-- 输出的 `p3_path.npy`、`p3_velocity_profile.csv` 是 `问题4_交付包` 的输入。
+- 输入 `daily_features.csv` 来自 `../Q1/result/`（已复制一份到本包 `input/`）。
+- 输出的 `p3_path.npy`、`p3_velocity_profile.csv` 是 `../Q4` 的输入。

@@ -30,16 +30,15 @@
 ## 二、目录结构
 
 ```
-问题2_交付包/
+Q2/
 ├── 00_README.md
-├── 01_报告/
-│   └── 问题2_分析报告.md
-├── 02_代码/
+├── 问题2_分析报告.md
+├── code/
 │   ├── config.py        路径配置
 │   ├── p2_static.py     84 点地形阈值 + DEM 空间易发性
 │   ├── p2_dynamic.py    DDF 标定 + 冰川排名 + 触发指数 + 尺度敏感性
 │   └── p2_figs.py       四张图
-├── 03_结果/
+├── result/
 │   ├── p2_terrain_thresholds.csv   分位数阈值
 │   ├── p2_logit_coef.csv           规模判别系数
 │   ├── p2_dem_logit.csv            DEM 易发性系数
@@ -48,12 +47,12 @@
 │   ├── p2_melt_dates.csv           逐年累积融水关键日期
 │   ├── p2_daily_index.csv          日尺度触发指数
 │   └── p2_scale_sensitivity.csv    分辨率敏感性
-├── 04_图表/
+├── image/
 │   ├── p2_fig1_terrain_thresholds.png
 │   ├── p2_fig2_melt_progress.png
 │   ├── p2_fig3_ti.png
 │   └── p2_fig4_scale.png
-└── 05_输入/
+└── input/
     └── daily_features.csv  问题 1 的日尺度特征表（唯一输入依赖）
 ```
 
@@ -61,15 +60,19 @@
 
 ## 三、复现
 
-环境：Python 3.12，依赖 `numpy pandas scikit-learn matplotlib rasterio geopandas`。
+环境：Python 3.12，依赖 `numpy pandas scikit-learn matplotlib rasterio geopandas`
 
 ```bash
-python 02_代码/p2_static.py     # 约 20 s
-python 02_代码/p2_dynamic.py    # 约 40 s
-python 02_代码/p2_figs.py
+pip install numpy pandas scikit-learn matplotlib rasterio geopandas
 ```
 
-原始数据默认读 `赛道B/附件/`（`config.py` 相对定位）。
+```bash
+python code/p2_static.py     # 约 20 s
+python code/p2_dynamic.py    # 约 40 s
+python code/p2_figs.py
+```
+
+原始数据默认读 `resources/DataSet_3`（冰川）、`DataSet_6`（历史灾点）、`DataSet_7`（DEM），由 `code/config.py` 的 `RESOURCES` 相对定位。
 
 ---
 
@@ -98,5 +101,5 @@ python 02_代码/p2_figs.py
 
 ## 六、与其他包的关系
 
-- 输入 `daily_features.csv` 来自 `问题1_交付包/03_结果/`。
-- 本包的 DDF 与触发指数直接支撑 `问题3_交付包` 的触发时刻区间。
+- 输入 `daily_features.csv` 来自 `../Q1/result/daily_features.csv`（已复制一份到本包 `input/`）。
+- 本包的 DDF 与触发指数直接支撑 `../Q3` 的触发时刻区间。
