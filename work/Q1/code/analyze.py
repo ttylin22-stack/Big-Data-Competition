@@ -49,7 +49,7 @@ print('\n融季样本 %d 天，正样本 %d 天（PDD_30d ≥ %.1f）' % (len(me
 TEMP_LIKE = ['PDD_source', 'PDD_7d', 'PDD_30d', 'T_station_mean', 'T_station_max', 'T_station_min',
              'T_source_mean', 'T_source_max', 'T_source_min', 'T_port_mean', 'T_port_max', 'T_port_min',
              'T_source_mean_anom', 'T_source_anom_7d', 'T_port_mean_anom', 'T_station_mean_anom',
-             'no_freeze_days', 'heatwave']
+             'no_freeze_days_flag', 'heatwave']
 feats_all = [c for c in CAND if c not in ('y',) and me[c].notna().sum() > len(me) * 0.6]
 feats_ind = [c for c in feats_all if c not in TEMP_LIKE]
 

@@ -11,7 +11,7 @@ thr = me['PDD_30d'].quantile(0.95)
 me['y'] = (me['PDD_30d'] >= thr).astype(int)
 
 EXCL = [c for c in d.columns if c.startswith(('T_station', 'T_source', 'T_port', 'PDD'))] + \
-       ['date', 'year', 'month', 'doy', 'heatwave', 'no_freeze_days']
+       ['date', 'year', 'month', 'doy', 'heatwave', 'no_freeze_days_flag']
 EXCL += [c for c in d.columns if c.endswith('_clim')]
 feats = [c for c in d.columns if c not in EXCL and me[c].notna().sum() > len(me) * 0.6]
 
