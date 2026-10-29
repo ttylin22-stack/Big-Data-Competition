@@ -2,30 +2,36 @@ import os, glob
 import numpy as np
 import pandas as pd
 
-from config import BASE, DATA, FIGS, TMP
-D1 = os.path.join(BASE, '（1）西藏吉隆高寒山区地气相互作用逐小时综合观测数据集（2021–2026）')
-OUT = DATA
-os.makedirs(OUT, exist_ok=True)
+from config import RESOURCES, RESULT, TMP
+DATA1 = os.path.join(RESOURCES, "DataSet_1")
+os.makedirs(RESULT, exist_ok=True)
 
+####处理原始数据####
+#载入数据并清洗
 def load(kind):
-    fs = sorted(glob.glob(os.path.join(D1, f'{kind}_Gyirong_*.csv')))
+    #先创建所需读取文件的有序列表
+    fs = sorted(glob.glob(os.path.join(DATA1, f'{kind}_Gyirong_*.csv')))
+    #再创建基于该目录的DataFrame
     df = pd.concat([pd.read_csv(f) for f in fs], ignore_index=True)
-    df = df.replace(9999.9, np.nan).replace(-9999.0, np.nan)
+    #格式化
+    df = df.replace(9999.9, np.nan)
     df['t'] = pd.to_datetime(df['Timestamp'], errors='coerce')
     df = df.dropna(subset=['t']).drop(columns=['Timestamp'])
+        ##这个地方把QC全删了，但是有些QC没达到8的地方可能是误差较大的数据，可能要把QC当作数据真实度的权重
     df = df.drop(columns=[c for c in df.columns if c.startswith('QC_')])
     for c in df.columns:
         if c != 't':
             df[c] = pd.to_numeric(df[c], errors='coerce')
     return df.drop_duplicates('t').sort_values('t')
-
+#将四类数据合并到一起
 met = load('MET'); radm = load('RADM'); soil = load('SOIL'); flux = load('FLUX')
 print('行数 MET/RADM/SOIL/FLUX:', len(met), len(radm), len(soil), len(flux))
-
 df = met.merge(radm, on='t', how='outer').merge(soil, on='t', how='outer').merge(flux, on='t', how='outer')
 df = df.sort_values('t').reset_index(drop=True)
 print('合并后', df.shape, df['t'].min(), '→', df['t'].max())
 
+
+#以下是算法部分
 # ---------------- 逐小时物理量 ----------------
 T = {z: df[f'Ta_{z}m(degree C)'] for z in (1, 2, 4, 10, 20)}
 WS = {z: df[f'WS_{z}m(m/s)'] for z in (1, 2, 4, 10, 20)}
@@ -137,8 +143,8 @@ daily['T_source_anom_7d'] = daily['T_source_mean_anom'].rolling(7, min_periods=5
 daily['heatwave'] = (daily['T_source_anom_7d'] > 2).astype(int)
 daily['no_freeze_days'] = (daily['T_source_min'] > 0).astype(int)
 
-daily.to_csv(os.path.join(OUT, 'daily_features.csv'), index=False, encoding='utf-8-sig')
+daily.to_csv(os.path.join(RESULT, 'daily_features.csv'), index=False, encoding='utf-8-sig')
 df.to_csv(os.path.join(TMP, 'hourly_panel.csv.gz'), index=False, compression='gzip', encoding='utf-8-sig')
-print('日表', daily.shape, '→', os.path.join(OUT, 'daily_features.csv'))
+print('日表', daily.shape, '→', os.path.join(RESULT, 'daily_features.csv'))
 print('列:', list(daily.columns))
 print(daily[['date', 'T_source_mean', 'PDD_30d', 'Rn_sum', 'Precip(mm)_sum']].tail(3).to_string(index=False))

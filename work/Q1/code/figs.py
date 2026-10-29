@@ -8,11 +8,11 @@ import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei']
 plt.rcParams['axes.unicode_minus'] = False
 
-from config import DATA, FIGS
-OUT = DATA
-FIG = FIGS
-os.makedirs(FIG, exist_ok=True)
-d = pd.read_csv(os.path.join(OUT, 'daily_features.csv'), parse_dates=['date'])
+from config import RESULT, IMAGE
+
+
+os.makedirs(IMAGE, exist_ok=True)
+d = pd.read_csv(os.path.join(RESULT, 'daily_features.csv'), parse_dates=['date'])
 EVENT = pd.Timestamp('2026-08-26')
 
 # 图1
@@ -28,7 +28,7 @@ ax.set_title('三条温度线：触发在源区、承灾在口岸（2021–2026�
 ax.legend(loc='lower left', fontsize=8, ncol=3)
 ax.grid(alpha=0.25)
 fig.tight_layout()
-fig.savefig(os.path.join(FIG, 'fig1_temperature_lines.png'), dpi=150)
+fig.savefig(os.path.join(IMAGE, 'fig1_temperature_lines.png'), dpi=150)
 plt.close(fig)
 
 # 图2：PDD + 峰值 + 滞后
@@ -57,7 +57,7 @@ ax.set_title('热力累积在 7 月底见顶，事件发生在峰值后 29 天')
 ax.legend(fontsize=8, loc='upper left')
 ax.grid(alpha=0.25)
 fig.tight_layout()
-fig.savefig(os.path.join(FIG, 'fig2_pdd.png'), dpi=150)
+fig.savefig(os.path.join(IMAGE, 'fig2_pdd.png'), dpi=150)
 plt.close(fig)
 
 # 图3
@@ -78,11 +78,11 @@ for ax, c, lb in zip(axes, top5, label5):
         ax.set_ylabel('标准化值 (z)')
 fig.suptitle('事件前 3 天（红点）与 2021–2025 年 8–9 月气候态（箱线）', fontsize=11)
 fig.tight_layout()
-fig.savefig(os.path.join(FIG, 'fig3_top5_box.png'), dpi=150)
+fig.savefig(os.path.join(IMAGE, 'fig3_top5_box.png'), dpi=150)
 plt.close(fig)
 
 # 图4
-tab = pd.read_csv(os.path.join(OUT, 'borda_ranking.csv')).head(12).sort_values('borda')
+tab = pd.read_csv(os.path.join(RESULT, 'borda_ranking.csv')).head(12).sort_values('borda')
 tab = tab.assign(score=tab['borda'].max() + 1 - tab['borda'])
 fig, ax = plt.subplots(figsize=(9, 5))
 colors = ['#d62728' if f in top5 else '#4c72b0' for f in tab['feature']]
@@ -94,6 +94,6 @@ ax.set_xlabel('综合得分（越长越靠前；红色为最终 Top-5）')
 ax.set_title('特征关联性综合排序（AUC + 事件距平 + 随机森林）')
 ax.grid(axis='x', alpha=0.25)
 fig.tight_layout()
-fig.savefig(os.path.join(FIG, 'fig4_borda.png'), dpi=150)
+fig.savefig(os.path.join(IMAGE, 'fig4_borda.png'), dpi=150)
 plt.close(fig)
 print('ok')

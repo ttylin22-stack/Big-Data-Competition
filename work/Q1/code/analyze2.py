@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
-from config import DATA
-OUT = DATA
-d = pd.read_csv(os.path.join(OUT, 'daily_features.csv'), parse_dates=['date'])
+from config import RESULT
+
+d = pd.read_csv(os.path.join(RESULT, 'daily_features.csv'), parse_dates=['date'])
 me = d[(d['month'].between(6, 9)) & (d['year'].between(2021, 2025))].copy().dropna(subset=['PDD_30d'])
 thr = me['PDD_30d'].quantile(0.95)
 me['y'] = (me['PDD_30d'] >= thr).astype(int)
@@ -58,7 +58,7 @@ for c in t['feature']:
     if len(x) > 50 and x.std() > 0:
         zs[c] = (win[c].mean() - x.mean()) / x.std()
 t['event_z'] = t['feature'].map(zs)
-t.to_csv(os.path.join(OUT, 'feature_final_table.csv'), index=False, encoding='utf-8-sig')
+t.to_csv(os.path.join(RESULT, 'feature_final_table.csv'), index=False, encoding='utf-8-sig')
 
 print('\n=== 推荐 Top-5（综合：代理标签 AUC + 事件窗口距平 + 物理可解释性）===')
 top = t[t['cluster_rep']].head(6)[['feature', 'auc', 'event_z']]

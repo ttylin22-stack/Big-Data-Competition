@@ -5,9 +5,9 @@ from sklearn.metrics import roc_auc_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import mutual_info_classif
 
-from config import DATA
-OUT = DATA
-d = pd.read_csv(os.path.join(OUT, 'daily_features.csv'), parse_dates=['date'])
+from config import RESULT
+
+d = pd.read_csv(os.path.join(RESULT, 'daily_features.csv'), parse_dates=['date'])
 print('日表', d.shape, d['date'].min().date(), '→', d['date'].max().date())
 
 EVENT = pd.Timestamp('2026-08-26')
@@ -33,7 +33,7 @@ for c in CAND:
     rows.append({'feature': c, 'event_mean': xe, 'ctrl_mean': mu, 'ctrl_sd': sd,
                  'z': z, 'pct_rank': pct, 'abs_z': abs(z)})
 cc = pd.DataFrame(rows).sort_values('abs_z', ascending=False)
-cc.to_csv(os.path.join(OUT, 'case_crossover_ranking.csv'), index=False, encoding='utf-8-sig')
+cc.to_csv(os.path.join(RESULT, 'case_crossover_ranking.csv'), index=False, encoding='utf-8-sig')
 print('\n【分析A】事件前 72 小时 vs 2021-2025 同期气候态（按 |z| 排序，前 15）')
 print(cc.head(15)[['feature', 'event_mean', 'ctrl_mean', 'z', 'pct_rank']].to_string(index=False, float_format=lambda v: '%.2f' % v))
 print('\n降水相关特征的位置：')
@@ -64,7 +64,7 @@ def rank_table(feats, tag):
         out.append({'feature': c, 'auc': auc, 'n': len(s)})
     t = pd.DataFrame(out).sort_values('auc', ascending=False).reset_index(drop=True)
     t['rank'] = t.index + 1
-    t.to_csv(os.path.join(OUT, f'proxy_label_ranking_{tag}.csv'), index=False, encoding='utf-8-sig')
+    t.to_csv(os.path.join(RESULT, f'proxy_label_ranking_{tag}.csv'), index=False, encoding='utf-8-sig')
     return t
 
 t_all = rank_table(feats_all, 'all')
@@ -97,7 +97,7 @@ for b in range(NB):
     for _, c in sc[:5]:
         counts[c] += 1
 stab = pd.DataFrame([{'feature': k, 'top5_freq': v / NB} for k, v in counts.items()]).sort_values('top5_freq', ascending=False)
-stab.to_csv(os.path.join(OUT, 'top5_stability.csv'), index=False, encoding='utf-8-sig')
+stab.to_csv(os.path.join(RESULT, 'top5_stability.csv'), index=False, encoding='utf-8-sig')
 print('\n【稳定性】7 天块 bootstrap（%d 次）Top-5 入选频率' % NB)
 print(stab.head(12).to_string(index=False, float_format=lambda v: '%.2f' % v))
 
@@ -108,7 +108,7 @@ y = me['y'].values
 rf = RandomForestClassifier(n_estimators=400, min_samples_leaf=5, random_state=0, n_jobs=-1, class_weight='balanced')
 rf.fit(X, y)
 imp = pd.DataFrame({'feature': feats_ind, 'rf_importance': rf.feature_importances_}).sort_values('rf_importance', ascending=False)
-imp.to_csv(os.path.join(OUT, 'rf_importance.csv'), index=False, encoding='utf-8-sig')
+imp.to_csv(os.path.join(RESULT, 'rf_importance.csv'), index=False, encoding='utf-8-sig')
 print('\n【多变量】随机森林（仅非温度特征）重要性前 10')
 print(imp.head(10).to_string(index=False, float_format=lambda v: '%.4f' % v))
 print('\n样本内 AUC = %.3f（仅作参考，未做时间外推验证）' % roc_auc_score(y, rf.predict_proba(X)[:, 1]))

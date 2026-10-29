@@ -4,9 +4,9 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 from sklearn.ensemble import RandomForestClassifier
 
-from config import DATA
-OUT = DATA
-d = pd.read_csv(os.path.join(OUT, 'daily_features.csv'), parse_dates=['date'])
+from config import RESULT
+
+d = pd.read_csv(os.path.join(RESULT, 'daily_features.csv'), parse_dates=['date'])
 me = d[(d['month'].between(6, 9)) & (d['year'].between(2021, 2025))].copy().dropna(subset=['PDD_30d'])
 thr = me['PDD_30d'].quantile(0.95)
 me['y'] = (me['PDD_30d'] >= thr).astype(int)
@@ -55,7 +55,7 @@ for f in tab['feature']:
         continue
     keep.append(f)
 tab['selected'] = tab['feature'].isin(keep)
-tab.to_csv(os.path.join(OUT, 'borda_ranking.csv'), index=False, encoding='utf-8-sig')
+tab.to_csv(os.path.join(RESULT, 'borda_ranking.csv'), index=False, encoding='utf-8-sig')
 
 print('候选 %d 个 → 去共线后 %d 个' % (len(tab), len(keep)))
 print('\n=== Borda 综合排序（AUC + 事件距平 + 随机森林重要性）前 15 ===')
