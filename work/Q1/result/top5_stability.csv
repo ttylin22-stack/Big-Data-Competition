@@ -29,10 +29,10 @@ USTAR(m/s)_max,0.0
 USTAR(m/s)_mean,0.0
 Ri_max,0.0
 Ri_mean,0.0
-inv_flag_sum,0.0
-inv_str_max,0.0
-inv_str_mean,0.0
-lapse_mean,0.0
+TEMP_inversion_flag_sum,0.0
+TEMP_inversion_max,0.0
+TEMP_inversion_mean,0.0
+TEMP_lapse_rate_mean,0.0
 T_port_mean,0.0
 T_port_max,0.0
 T_source_mean,0.0
@@ -41,7 +41,7 @@ WS_10m(m/s)_max,0.0
 WS_10m(m/s)_mean,0.0
 Precip(mm)_sum,0.0
 VPD_kPa_mean,0.0
-G0_sum,0.0
+G_0.1m(W/m2)_sum,0.0
 soilT_0.1m(degree C)_mean,0.0
 VWC_0.1m(m3/m3)_mean,0.0
 dTsoil_mean,0.0
@@ -52,4 +52,4 @@ T_source_mean_anom,0.0
 T_port_mean_anom,0.0
 T_station_mean_anom,0.0
 heatwave,0.0
-no_freeze_days,0.0
+no_freeze_days_flag,0.0
