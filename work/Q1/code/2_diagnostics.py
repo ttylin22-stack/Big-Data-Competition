@@ -1,16 +1,3 @@
-"""2_diagnostics.py —— 支撑报告"局限"与"稳健性"的定量检查。
-
-解决三类"只看主结果看不出来"的问题：
-  1) 降水证据的强度：8-9 月本来就有一半以上是无雨日，0 mm 到底说明什么？
-  2) 极端热力是否成立：2026 年 8-9 月整体偏暖还是偏冷？热浪标志是否触发？
-  3) 0.8 m 土壤湿度传感器的年际稳定性，以及 dVWC 对基线年份/窗口的敏感性。
-
-输出：
-  result/context.csv            事件窗与季节的关键上下文指标（键值）
-  result/season_context.csv     逐年 8-9 月热力指标
-  result/vwc_sensor_check.csv   逐年 8-9 月各层含水量（传感器稳定性）
-  result/sensitivity_table.csv  dVWC / LE / VPD 对窗口与基线的敏感性
-"""
 import os
 
 import numpy as np
