@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """问题4:能量线—侧向扩散仿真(沿沟道能量线 + 侧向影响宽度)，输出水深/到达时间/范围
 
-质量守恒按"逐断面实际湿宽"分配（方案 B）：
+质量守恒按"逐断面实际湿宽"分配:
 - 湿边界随水深自适应：高出沟底不超过 max(2h, 5 m)，迭代至自洽；
 - 每个断面按 q(s)·Δs 分配体积，抛物线横向归一，保证段内严格守恒；
 - 计算域外的 18% 视为从下游出口流出。
@@ -162,7 +162,7 @@ for q in np.linspace(0, skm[-1], 12):
                  'depth_max_m': round(float(depth[m].max()), 2) if m.any() else 0.0,
                  'width_m': round(float(wq), 1) if np.isfinite(wq) else 0.0})
 sw = pd.DataFrame(rows)
-print('\n沿程统计：')
+print('\n沿程统计:')
 print(sw.to_string(index=False))
 sw.to_csv(os.path.join(OUT, 'p4_along_path.csv'), index=False, encoding='utf-8-sig')
 
