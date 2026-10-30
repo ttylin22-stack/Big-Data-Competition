@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
 """问题4：能量线—侧向扩散仿真（沿沟道能量线 + 侧向影响宽度），输出水深/到达时间/范围"""
+from config import RESOURCES, RESULT, IMAGE, INPUT
 import os
 import numpy as np
 import pandas as pd
 import rasterio
 from sklearn.neighbors import NearestNeighbors
 
-from config import RESOURCES, INPUT, RESULT, IMAGE
+OUT = RESULT
+P3 = INPUT
+os.makedirs(OUT, exist_ok=True)
 
-os.makedirs(RESULT, exist_ok=True)
-
-demf = os.path.join(RESOURCES, 'DataSet_7', 'DEM.tif')
+demf = os.path.join(RESOURCES, 'dem', 'DEM.tif')
 with rasterio.open(demf) as s:
     dem = s.read(1).astype('float32')
     dem[dem == s.nodata] = np.nan
     tr = s.transform
 h, w = dem.shape
 
-path = np.load(os.path.join(INPUT, 'p3_path.npy'))
-prof = pd.read_csv(os.path.join(INPUT, 'p3_path_profile.csv'))
-vel = pd.read_csv(os.path.join(INPUT, 'p3_velocity_profile.csv'))
+path = np.load(os.path.join(P3, 'p3_path.npy'))
+prof = pd.read_csv(os.path.join(P3, 'p3_path_profile.csv'))
+vel = pd.read_csv(os.path.join(P3, 'p3_velocity_profile.csv'))
 
 lon = np.array([rasterio.transform.xy(tr, r, c)[0] for r, c in path])
 lat = np.array([rasterio.transform.xy(tr, r, c)[1] for r, c in path])
@@ -44,20 +45,30 @@ dist, idx = nn.kneighbors(np.column_stack([gx, gy]))
 d_lat = dist[:, 0].reshape(h, w)
 s_cell = skm[idx[:, 0]].reshape(h, w)
 
-energy = z0 - MU * s_cell * 1000
-width = W0 + WK * s_cell * 1000
-affected = (d_lat <= width) & (dem <= energy) & np.isfinite(dem)
-
-# 质量守恒：沿程体积按指数沉积衰减，断面平均水深 h(s)=V0/(Ld*W(s))*exp(-s/Ld)
+# 质量守恒：沿程体积按指数沉积衰减，断面平均水深 h(s)=V0/(LD*W(s))*exp(-s/LD)
 V0 = 7.5e6          # m3（3e6 m3 固体 × 2.5 扩容）
 LD = 12.0           # km，沉积衰减长度
+width = W0 + WK * s_cell * 1000
 h_s = V0 / (LD * 1000.0 * width) * np.exp(-s_cell / LD)
+
+# 能量线用视摩擦角 μ_E = H/L（Fahrböschung），与 Voellmy 的 μ 是两个不同的量
+HL = (z0 - float(prof['elev_m'].iloc[-1])) / (skm[-1] * 1000)
+energy = z0 - HL * s_cell * 1000
+z_path = np.interp(s_cell, prof['dist_km'].values, prof['elev_m'].values)
+# 第三条约束：不能爬到沟底以上太高的山坡（否则会把整个河谷两侧都算成淹没区）
+above = dem - z_path
+affected = ((d_lat <= width) & (dem <= energy) & np.isfinite(dem)
+            & (above <= np.maximum(2.0 * h_s, 5.0)))
+print('视摩擦角 μ_E = %.4f（%.1f°）' % (HL, np.degrees(np.arctan(HL))))
+
 lateral = np.clip(1.0 - (d_lat / np.maximum(width, 1.0)) ** 2, 0, 1)
 depth = np.where(affected, h_s * lateral, 0.0)
 
-t_max = 22.8
-arrive = np.where(affected, np.interp(s_cell, vel['dist_km'].values,
-                                      np.linspace(0, t_max, len(vel))), np.nan)
+# 到达时间：对速度剖面按 1/v 积分得到累计时间 t(s)，再插值到每个像元
+s_m = vel['dist_km'].values * 1000.0
+vv = vel['v_mps'].values
+t_cum = np.concatenate([[0.0], np.cumsum(np.diff(s_m) / (0.5 * (vv[1:] + vv[:-1])))]) / 60.0
+arrive = np.where(affected, np.interp(s_cell, vel['dist_km'].values, t_cum), np.nan)
 
 rp, cp = rasterio.transform.rowcol(tr, 85.3780, 28.2770)
 print('口岸栅格 (%d,%d) 高程 %.0f m：水深 %.1f m，到达 %.1f min，受影响 %s'
@@ -77,9 +88,9 @@ for q in np.linspace(0, skm[-1], 12):
 sw = pd.DataFrame(rows)
 print('\n沿程统计：')
 print(sw.to_string(index=False))
-sw.to_csv(os.path.join(RESULT, 'p4_along_path.csv'), index=False, encoding='utf-8-sig')
+sw.to_csv(os.path.join(OUT, 'p4_along_path.csv'), index=False, encoding='utf-8-sig')
 
-np.savez_compressed(os.path.join(RESULT, 'p4_result.npz'), depth=depth.astype('float32'),
+np.savez_compressed(os.path.join(OUT, 'p4_result.npz'), depth=depth.astype('float32'),
                     arrive=arrive.astype('float32'), affected=affected,
                     s_cell=s_cell.astype('float32'), dem=dem.astype('float32'),
                     path=path, port=np.array([rp, cp]))

@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 """问题3：预报模型、触发时刻 95% 区间、预警时间、覆盖率、空间距离范围"""
+from config import RESOURCES, RESULT, IMAGE, INPUT
 import os, heapq
 import numpy as np
 import pandas as pd
 import rasterio
 
-
-from config import RESOURCES, INPUT, RESULT, IMAGE
-
-os.makedirs(RESULT, exist_ok=True)
+OUT = RESULT
+os.makedirs(OUT, exist_ok=True)
 rng = np.random.default_rng(7)
 
 daily = pd.read_csv(os.path.join(INPUT, 'daily_features.csv'), parse_dates=['date'])
 EVENT = pd.Timestamp('2026-08-26')
 
-demf = os.path.join(RESOURCES, 'DataSet_7', 'DEM.tif')
+demf = os.path.join(RESOURCES, 'dem', 'DEM.tif')
 with rasterio.open(demf) as s:
     dem = s.read(1).astype('float64')
     dem[dem == s.nodata] = np.nan
@@ -76,14 +75,26 @@ def d8_path(z, start, goal, stop_r=3, max_steps=40000):
 path = d8_path(filled, src, port)
 res_x = abs(tr.a) * 111320 * np.cos(np.radians(28.3))
 res_y = abs(tr.e) * 110540
-step = np.hypot(res_x, res_y)
+
+# 路径会越过口岸继续下切到 DEM 边界，按"离口岸最近的像元"截断
+_p = np.array(path)
+_d2 = (_p[:, 0] - port[0]) ** 2 + (_p[:, 1] - port[1]) ** 2
+_k = int(np.argmin(_d2))
+print('\nD8 路径共 %d 像元，离口岸最近的点在第 %d 个（横向偏离 %.0f m）'
+      % (len(_p), _k, np.sqrt(_d2[_k]) * 30))
+path = path[: _k + 1]
 zz = np.array([dem[r, c] for r, c in path])
 dd = np.concatenate([[0], np.cumsum(np.hypot(np.diff([p[0] for p in path]) * res_y,
                                              np.diff([p[1] for p in path]) * res_x))]) / 1000
-print('\n沟道路径 %d 像元，沿程长约 %.1f km（直线 15.1 km，曲折度 %.2f）'
-      % (len(path), dd[-1], dd[-1] / 15.1))
-print('  起点 %.0f m → 终点 %.0f m，落差 %.0f m，H/L = %.3f'
+_lon0, _lat0 = rasterio.transform.xy(tr, path[0][0], path[0][1])
+_lon1, _lat1 = rasterio.transform.xy(tr, path[-1][0], path[-1][1])
+straight = np.hypot((_lon1 - _lon0) * res_x / abs(tr.a), (_lat1 - _lat0) * res_y / abs(tr.e)) / 1000
+print('沟道（源区→口岸）%d 像元，沿程 %.1f km（直线 %.1f km，曲折度 %.2f）'
+      % (len(path), dd[-1], straight, dd[-1] / straight))
+print('  起点 %.0f m → 口岸沟底 %.0f m，落差 %.0f m，H/L = %.3f'
       % (zz[0], zz[-1], zz[0] - zz[-1], (zz[0] - zz[-1]) / (dd[-1] * 1000)))
+print('  注：口岸台地高程 %.0f m，高出沟底 %.0f m，位于横向 %.0f m 处'
+      % (dem[port], dem[port] - zz[-1], np.sqrt(_d2[_k]) * 30))
 
 # ---- 能量线法：v(s) = sqrt(v0^2 + 2g(Δz(s) - μ s)) ----
 HL = (zz[0] - zz[-1]) / (dd[-1] * 1000)
@@ -148,7 +159,7 @@ for y in range(2021, 2026):
 coverage = hit / 5
 print('  覆盖率 %d/5 = %.0f%%，平均区间宽度 %.0f 天'
       % (hit, coverage * 100, np.mean([r['width_days'] for r in rows])))
-pd.DataFrame(rows).to_csv(os.path.join(RESULT, 'p3_coverage.csv'), index=False, encoding='utf-8-sig')
+pd.DataFrame(rows).to_csv(os.path.join(OUT, 'p3_coverage.csv'), index=False, encoding='utf-8-sig')
 
 sims = []
 for _ in range(3000):
@@ -165,18 +176,18 @@ print('  实际事件 %s，%s区间内（位于第 %.0f 百分位）'
       % (EVENT.date(), '在' if lo26 <= EVENT <= hi26 else '不在',
          np.mean(arr <= EVENT.timestamp()) * 100))
 lead = (EVENT - med26).days
-print('  预警提前量：中位 %.0f 天；事件前最近一次"高危窗口"开始日可由模型给出' % lead)
+print('  中位触发日与事件日相差 %.0f 天（非区间下界）；事件前最近一次"高危窗口"开始日可由模型给出' % lead)
 
-pd.DataFrame({'date': sims}).to_csv(os.path.join(RESULT, 'p3_trigger_ensemble.csv'), index=False, encoding='utf-8-sig')
-pd.DataFrame({'travel_min': tau}).to_csv(os.path.join(RESULT, 'p3_travel_time.csv'), index=False, encoding='utf-8-sig')
-pd.DataFrame({'dist_km': dd, 'elev_m': zz}).to_csv(os.path.join(RESULT, 'p3_path_profile.csv'),
+pd.DataFrame({'date': sims}).to_csv(os.path.join(OUT, 'p3_trigger_ensemble.csv'), index=False, encoding='utf-8-sig')
+pd.DataFrame({'travel_min': tau}).to_csv(os.path.join(OUT, 'p3_travel_time.csv'), index=False, encoding='utf-8-sig')
+pd.DataFrame({'dist_km': dd, 'elev_m': zz}).to_csv(os.path.join(OUT, 'p3_path_profile.csv'),
                                                    index=False, encoding='utf-8-sig')
 pd.DataFrame({'dist_km': np.arange(len(v_cal)) * 0.02, 'v_mps': v_cal}).to_csv(
-    os.path.join(RESULT, 'p3_velocity_profile.csv'), index=False, encoding='utf-8-sig')
-np.save(os.path.join(RESULT, 'p3_path.npy'), np.array(path))
+    os.path.join(OUT, 'p3_velocity_profile.csv'), index=False, encoding='utf-8-sig')
+np.save(os.path.join(OUT, 'p3_path.npy'), np.array(path))
 
 summary = {
-    'path_km': round(float(dd[-1]), 1), 'straight_km': 15.1,
+    'path_km': round(float(dd[-1]), 1), 'straight_km': round(float(straight), 1),
     'drop_m': round(float(zz[0] - zz[-1])), 'HL': round(float(HL), 3),
     'travel_p5': round(float(np.percentile(tau, 5)), 1),
     'travel_p50': round(float(np.median(tau)), 1),
@@ -184,5 +195,6 @@ summary = {
     'trigger_lo': str(lo26.date()), 'trigger_hi': str(hi26.date()), 'trigger_med': str(med26.date()),
     'coverage': coverage, 'lead_days': int(lead),
 }
-pd.Series(summary).to_csv(os.path.join(RESULT, 'p3_summary.csv'), encoding='utf-8-sig')
+pd.DataFrame([summary]).T.rename(columns={0: '值'}).rename_axis('指标').to_csv(
+    os.path.join(OUT, 'p3_summary.csv'), encoding='utf-8-sig')
 print('\n摘要：', summary)

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """问题3 图表"""
+from config import RESULT, IMAGE
 import os
 import numpy as np
 import pandas as pd
 import matplotlib
-from config import RESOURCES, INPUT, RESULT, IMAGE
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -12,14 +12,16 @@ import matplotlib.dates as mdates
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei']
 plt.rcParams['axes.unicode_minus'] = False
 
-os.makedirs(IMAGE, exist_ok=True)
+OUT = RESULT
+FIG = IMAGE
+os.makedirs(FIG, exist_ok=True)
 EVENT = pd.Timestamp('2026-08-26')
 
-tri = pd.read_csv(os.path.join(RESULT, 'p3_trigger_ensemble.csv'), parse_dates=['date'])
-tau = pd.read_csv(os.path.join(RESULT, 'p3_travel_time.csv'))['travel_min'].values
-prof = pd.read_csv(os.path.join(RESULT, 'p3_path_profile.csv'))
-vel = pd.read_csv(os.path.join(RESULT, 'p3_velocity_profile.csv'))
-cov = pd.read_csv(os.path.join(RESULT, 'p3_coverage.csv'))
+tri = pd.read_csv(os.path.join(OUT, 'p3_trigger_ensemble.csv'), parse_dates=['date'])
+tau = pd.read_csv(os.path.join(OUT, 'p3_travel_time.csv'))['travel_min'].values
+prof = pd.read_csv(os.path.join(OUT, 'p3_path_profile.csv'))
+vel = pd.read_csv(os.path.join(OUT, 'p3_velocity_profile.csv'))
+cov = pd.read_csv(os.path.join(OUT, 'p3_coverage.csv'))
 
 # 图1 触发时刻集合
 fig, ax = plt.subplots(figsize=(10, 3.8))
@@ -33,7 +35,7 @@ ax.legend(fontsize=8)
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
 ax.grid(alpha=0.25)
 fig.tight_layout()
-fig.savefig(os.path.join(IMAGE, 'p3_fig1_trigger_ci.png'), dpi=150)
+fig.savefig(os.path.join(FIG, 'p3_fig1_trigger_ci.png'), dpi=150)
 plt.close(fig)
 
 # 图2 覆盖率回测
@@ -49,7 +51,7 @@ ax.set_title('留一年外回测：5/5 年份的观测触发日落入区间（�
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
 ax.grid(axis='x', alpha=0.25)
 fig.tight_layout()
-fig.savefig(os.path.join(IMAGE, 'p3_fig2_coverage.png'), dpi=150)
+fig.savefig(os.path.join(FIG, 'p3_fig2_coverage.png'), dpi=150)
 plt.close(fig)
 
 # 图3 沟道剖面 + 速度
@@ -62,10 +64,10 @@ ax2 = ax1.twinx()
 ax2.plot(vel['dist_km'], vel['v_mps'], color='#1f77b4', lw=1.2, label='流速')
 ax2.set_ylabel('流速 (m/s)', color='#1f77b4')
 ax2.tick_params(axis='y', labelcolor='#1f77b4')
-ax1.set_title('源区→口岸 24.8 km 沟道纵剖面与 Voellmy 流速（到达口岸 22.8 分钟）')
+ax1.set_title('源区→口岸 %.1f km 沟道纵剖面与 Voellmy 流速' % prof['dist_km'].iloc[-1])
 ax1.grid(alpha=0.25)
 fig.tight_layout()
-fig.savefig(os.path.join(IMAGE, 'p3_fig3_profile.png'), dpi=150)
+fig.savefig(os.path.join(FIG, 'p3_fig3_profile.png'), dpi=150)
 plt.close(fig)
 
 # 图4 到达时间分布
@@ -78,6 +80,6 @@ ax.set_title('传播时间：中位 %.1f 分钟（%.1f–%.1f）'
              % (np.median(tau), np.percentile(tau, 5), np.percentile(tau, 95)))
 ax.grid(alpha=0.25)
 fig.tight_layout()
-fig.savefig(os.path.join(IMAGE, 'p3_fig4_travel.png'), dpi=150)
+fig.savefig(os.path.join(FIG, 'p3_fig4_travel.png'), dpi=150)
 plt.close(fig)
-print('ok', os.listdir(IMAGE))
+print('ok', os.listdir(FIG))

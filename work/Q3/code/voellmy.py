@@ -4,14 +4,24 @@ import numpy as np
 
 G = 9.81
 
-def run_voellmy(z, s_km, mu=0.05, xi=1000.0, hflow=8.0, v0=15.0, ds=20.0, vmin=1.0):
-    """沿沟道积分，返回 (时间数组 s, 速度数组, 是否到达终点)"""
+def run_voellmy(z, s_km, mu=0.05, xi=1000.0, hflow=8.0, v0=15.0, ds=20.0, vmin=1.0, smooth_m=600.0):
+    """沿沟道积分，返回 (时间数组, 速度数组, 是否到达终点)
+
+    smooth_m: 对高程剖面做移动平均的窗口长度（米）。像素级路径有台阶状锯齿，
+              不平滑会让坡度在"陡/平"之间跳动，速度曲线出现假振荡。
+    """
     s_m = s_km * 1000
     z = np.asarray(z, float)
     s_m = np.asarray(s_m, float)
     # 重采样到 ds 步长
     grid = np.arange(s_m[0], s_m[-1], ds)
     zz = np.interp(grid, s_m, z)
+    # 平滑：窗口至少 3 个点，且不超过剖面长度
+    win = int(max(3, min(round(smooth_m / ds), len(zz) // 2)))
+    if win % 2 == 0:
+        win += 1
+    kernel = np.ones(win) / win
+    zz = np.convolve(np.pad(zz, win // 2, mode='edge'), kernel, mode='valid')
     v = v0
     t = 0.0
     ts, vs, ss = [0.0], [v], [0.0]

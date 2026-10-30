@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import rasterio
 import matplotlib
-from config import RESOURCES, INPUT, RESULT, IMAGE
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -14,12 +13,15 @@ from matplotlib.colors import LightSource
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei']
 plt.rcParams['axes.unicode_minus'] = False
 
-os.makedirs(IMAGE, exist_ok=True)
+from config import RESOURCES, RESULT, IMAGE
+OUT = RESULT
+FIG = IMAGE
+os.makedirs(FIG, exist_ok=True)
 
-d = np.load(os.path.join(RESULT, 'p4_result.npz'))
+d = np.load(os.path.join(OUT, 'p4_result.npz'))
 depth, arrive, dem, path = d['depth'], d['arrive'], d['dem'], d['path']
 rp, cp = int(d['port'][0]), int(d['port'][1])
-with rasterio.open(os.path.join(RESOURCES, 'DataSet_7', 'DEM.tif')) as s:
+with rasterio.open(os.path.join(RESOURCES, 'dem', 'DEM.tif')) as s:
     tr = s.transform
     b = s.bounds
 
@@ -46,10 +48,12 @@ ax.plot(ext[0] + (cp - c0 + 0.5) * tr.a, ext[3] + (rp - r0 + 0.5) * tr.e, '*', c
 cb = fig.colorbar(im, ax=ax, shrink=0.8, pad=0.02)
 cb.set_label('最大水深 (m)')
 ax.set_xlabel('经度'); ax.set_ylabel('纬度')
-ax.set_title('碎屑流淹没范围（走廊放大）：10.05 km²，最大水深 10.4 m')
+_cell = ((b.right-b.left)/dem.shape[1]*111320*np.cos(np.radians(28.4))) * ((b.top-b.bottom)/dem.shape[0]*110540) / 1e6
+_area = float((depth > 0.01).sum()) * _cell
+ax.set_title('碎屑流淹没范围（走廊放大）：%.2f km²，最大水深 %.1f m' % (_area, float(depth.max())))
 ax.legend(loc='lower left', fontsize=8)
 fig.tight_layout()
-fig.savefig(os.path.join(IMAGE, 'p4_fig1_inundation.png'), dpi=160)
+fig.savefig(os.path.join(FIG, 'p4_fig1_inundation.png'), dpi=160)
 plt.close(fig)
 
 fig, ax = plt.subplots(figsize=(8.2, 7.4))
@@ -61,12 +65,12 @@ ax.plot(ext[0] + (cp - c0 + 0.5) * tr.a, ext[3] + (rp - r0 + 0.5) * tr.e, '*', c
 cb = fig.colorbar(im, ax=ax, shrink=0.8, pad=0.02)
 cb.set_label('到达时间 (min)')
 ax.set_xlabel('经度'); ax.set_ylabel('纬度')
-ax.set_title('到达时间场：释放区 0 min → 口岸 19 min')
+ax.set_title('到达时间场：释放区 0 min → 口岸 16 min')
 fig.tight_layout()
-fig.savefig(os.path.join(IMAGE, 'p4_fig2_arrival.png'), dpi=160)
+fig.savefig(os.path.join(FIG, 'p4_fig2_arrival.png'), dpi=160)
 plt.close(fig)
 
-al = pd.read_csv(os.path.join(RESULT, 'p4_along_path.csv'))
+al = pd.read_csv(os.path.join(OUT, 'p4_along_path.csv'))
 fig, ax1 = plt.subplots(figsize=(9, 3.6))
 ax1.plot(al['s_km'], al['depth_max_m'], 'o-', color='#d62728', label='断面最大水深')
 ax1.set_xlabel('沿程距离 (km)'); ax1.set_ylabel('水深 (m)', color='#d62728')
@@ -78,6 +82,6 @@ ax2.tick_params(axis='y', labelcolor='#1f77b4')
 ax1.set_title('沿程水深与影响宽度（质量守恒 + 指数沉积）')
 ax1.grid(alpha=0.25)
 fig.tight_layout()
-fig.savefig(os.path.join(IMAGE, 'p4_fig3_along.png'), dpi=160)
+fig.savefig(os.path.join(FIG, 'p4_fig3_along.png'), dpi=160)
 plt.close(fig)
-print('ok', os.listdir(IMAGE))
+print('ok', os.listdir(FIG))
