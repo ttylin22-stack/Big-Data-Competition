@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
-"""问题4 过程可视化：时间切片多帧、时空图、过程曲线
 
-基于 p4_result.npz 的静态度场/到达时间场做“运动学切片”：
-某像元在 t 时刻被淹没 ⇔ 该像元到达时间 ≤ t。
-这不是动力学求解，只是把同一组结果按时间展开，图注中已注明。
-"""
 import os
 import numpy as np
 import rasterio
