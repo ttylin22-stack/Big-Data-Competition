@@ -4,10 +4,10 @@ import numpy as np
 import pandas as pd
 
 from config import RESOURCES, INPUT, RESULT, IMAGE
+
 PT_DIR = 'DataSet_6'
 PT_SHP = '西藏日喀则市吉隆县泥石流灾害区历史灾点数据.shp'
 EVENT = pd.Timestamp('2026-08-26')
-
 
 def main():
     try:
@@ -29,7 +29,6 @@ def main():
     print('事件日 melt_frac = %.2f，lag = %d 天，入窗 = %s'
           % (ev['melt_frac'], ev['lag'], bool(ev['in_window'])))
 
-    # 图1 地形分位区间
     try:
         import geopandas as gpd
         pts = gpd.read_file(os.path.join(RESOURCES, PT_DIR, PT_SHP))
@@ -55,7 +54,6 @@ def main():
     fig.savefig(os.path.join(IMAGE, 'p2_fig1_terrain_thresholds.png'), dpi=150)
     plt.close(fig)
 
-    # 图2 逐年累积融水
     fig, ax = plt.subplots(figsize=(11, 4))
     for yr, g in d.groupby('year'):
         if yr < 2021:
@@ -75,7 +73,6 @@ def main():
     fig.savefig(os.path.join(IMAGE, 'p2_fig2_melt_progress.png'), dpi=150)
     plt.close(fig)
 
-    # 图3 高危窗口（三条件）+ TI 强度
     fig, ax = plt.subplots(figsize=(11, 3.6))
     ax.fill_between(d['date'], 0, 1, where=d['in_window'].astype(bool),
                     transform=ax.get_xaxis_transform(), color='#d62728',
@@ -90,7 +87,6 @@ def main():
     fig.savefig(os.path.join(IMAGE, 'p2_fig3_ti.png'), dpi=150)
     plt.close(fig)
 
-    # 图4 尺度敏感性
     sc = pd.read_csv(os.path.join(RESULT, 'p2_scale_sensitivity.csv'))
     fig, ax = plt.subplots(figsize=(6.5, 3.8))
     x = np.arange(len(sc))
@@ -109,7 +105,6 @@ def main():
     plt.close(fig)
 
     print('图已输出：', os.listdir(IMAGE))
-
 
 if __name__ == '__main__':
     main()
