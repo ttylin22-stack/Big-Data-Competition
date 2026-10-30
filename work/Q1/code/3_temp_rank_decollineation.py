@@ -1,10 +1,3 @@
-"""3_temp_rank_decollineation.py —— 剔除温度类后的独立特征榜单 + 贪心去共线。
-
-目的：证明"非温度特征里，哪些仍能区分热天"。若某特征与源区温度高度相关，
-说明它只是温度的另一种写法，不能算独立证据。
-
-输出：result/feature_final_table.csv
-"""
 import os
 
 import numpy as np

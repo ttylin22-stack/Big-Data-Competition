@@ -1,9 +1,5 @@
 """Q1 公共模块：事件窗、对照期、代理标签、距平、AUC、去共线。
-
-原先这些逻辑在 1main analyze.py / 2temp rank...py / 3borda rank.py 里各写了一遍，
-任何一处改动都会让三个脚本给出不同口径的结果。现在统一收敛到这里。
-
-依赖：numpy、pandas、scikit-learn（仅 AUC）
+这些逻辑在 1main analyze.py / 2temp rank...py / 3borda rank.py
 """
 import os
 
@@ -48,10 +44,6 @@ def load_daily():
 
 def candidate_features(d, min_obs=500):
     """可作为特征的列：排除时间列/质量列/气候态代理，且非空样本数足够。
-
-    气候态列（*_clim）是"日序的平滑函数"，本质是日历代理而不是观测变量；
-    若把它当气象特征参与排序，会得到"7 月底热，所以 7 月底热"的同义反复，
-    因此一律排除（距平 *_anom 保留了真实观测信息，可以保留）。
     """
     feats = [c for c in d.columns if c not in NON_FEATURES and not c.endswith('_clim')]
     return [c for c in feats if d[c].notna().sum() > min_obs]
@@ -59,9 +51,9 @@ def candidate_features(d, min_obs=500):
 
 # ---------------- 代理标签 ----------------
 def build_proxy_label(d, quantile=None):
-    """以"融季 PDD30 >= p95"构造代理标签，返回 (样本表, 阈值)。
+    """以"融季 PDD30 >= p95"构造代理标签
 
-    标签由 PDD 定义，因此 PDD 自身不能作为特征（循环性）。
+    标签由 PDD 定义，因此 PDD 自身不能作为特征
     """
     q = C.PROXY_QUANTILE if quantile is None else quantile
     me = melt_season(d).dropna(subset=['PDD_30d'])
@@ -116,7 +108,7 @@ def auc_table(me, features, min_n=100):
 
 # ---------------- 去共线 ----------------
 def dedupe_collinear(me, ordered, thr=None):
-    """按给定顺序贪心去共线：与已保留特征 |r| > thr 的跳过。"""
+    """按给定顺序贪心去共线"""
     thr = C.COLLINEAR_R if thr is None else thr
     kept = []
     for f in ordered:

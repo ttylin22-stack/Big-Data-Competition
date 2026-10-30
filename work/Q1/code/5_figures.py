@@ -1,10 +1,3 @@
-"""5_figures.py —— 出图（结果全部从 result/ 读取，不写死数值）。
-
-fig1 三条温度线
-fig2 2026 融季热力过程：日尺度峰值 vs 30 天滚动峰值（说明"滞后"是平滑位移）
-fig3 Top-5 在事件窗的位置 vs 2021-2025 气候态
-fig4 Borda 综合排序
-"""
 import os
 
 import matplotlib
