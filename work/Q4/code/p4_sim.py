@@ -11,7 +11,7 @@ OUT = RESULT
 P3 = INPUT
 os.makedirs(OUT, exist_ok=True)
 
-demf = os.path.join(RESOURCES, 'dem', 'DEM.tif')
+demf = os.path.join(RESOURCES, 'DataSet_7', 'DEM.tif')
 with rasterio.open(demf) as s:
     dem = s.read(1).astype('float32')
     dem[dem == s.nodata] = np.nan

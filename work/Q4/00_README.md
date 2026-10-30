@@ -55,7 +55,7 @@ python code/p4_sim.py     # 约 1 分钟（含 KDTree 查询 200 万像元）
 python code/p4_figs.py    # 几秒
 ```
 
-DEM 读 `../resources/dem/DEM.tif`。
+DEM 读 `../resources/DataSet_7/DEM.tif`。
 
 ---
 
