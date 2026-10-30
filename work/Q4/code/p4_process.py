@@ -23,7 +23,7 @@ os.makedirs(FIG, exist_ok=True)
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei']
 plt.rcParams['axes.unicode_minus'] = False
 
-# ---------- 关键参数（合理取值） ----------
+# 关键参数（合理取值）
 FRAMES = [0, 3, 6, 9, 12, 15, 17]   # 分钟；17 = 沟道末端
 DT = 0.25                            # 曲线时间步长（分钟）
 DEPTH_MIN, DEPTH_MAX = 0.1, 10.0     # 水深对数色标范围（与图 4-1 一致）
@@ -57,7 +57,7 @@ pr, pc = path[:, 0] - r0, path[:, 1] - c0
 cell_km2 = abs(tr.a * tr.e) * 111320 * np.cos(np.radians(28.3)) * 110540 / 1e6
 tmax = float(np.nanmax(arc))
 
-# ---------- 时间序列量 ----------
+#时间序列量
 tgrid = np.linspace(0, tmax, max(int(round(tmax / DT)) + 1, 2))
 _keep = [f for f in FRAMES if f < tmax - 1e-6]
 FRAMES = sorted(set(_keep + [round(tmax)]))
@@ -71,7 +71,7 @@ area_t, vol_t, front_t = map(np.array, (area_t, vol_t, front_t))
 print('t=0   面积 %.3f km2  体积 %.2e m3' % (area_t[0], vol_t[0]))
 print('t=17  面积 %.3f km2  体积 %.2e m3  前锋 %.1f km' % (area_t[-1], vol_t[-1], front_t[-1]))
 
-# ---------- 图 4-4：时间切片多帧 ----------
+# 图 4-4：时间切片多帧 
 fig = plt.figure(figsize=(13.2, 6.6))
 gs = GridSpec(2, 4, figure=fig, wspace=0.14, hspace=0.22)
 norm = mcolors.LogNorm(DEPTH_MIN, DEPTH_MAX)
@@ -109,7 +109,7 @@ fig.suptitle('淹没演进（运动学切片）：t 为到达时间阈值，蓝�
 fig.savefig(os.path.join(FIG, 'p4_fig4_frames.png'), dpi=150, bbox_inches='tight')
 plt.close(fig)
 
-# ---------- 图 4-5：时空图 ----------
+# 图 4-5：时空图 
 fig, ax = plt.subplots(figsize=(7.6, 5.2))
 ax.fill_between(tgrid, 0, front_t, color='#f4a582', alpha=0.75,
                 label='已到达区段')
@@ -128,7 +128,7 @@ fig.tight_layout()
 fig.savefig(os.path.join(FIG, 'p4_fig5_spacetime.png'), dpi=160)
 plt.close(fig)
 
-# ---------- 图 4-6：过程曲线 ----------
+# 图 4-6：过程曲线
 fig, ax1 = plt.subplots(figsize=(7.6, 3.9))
 l1, = ax1.plot(tgrid, area_t, color='#d62728', lw=2.2, label='湿润面积')
 ax1.set_xlabel('时间 (min)')

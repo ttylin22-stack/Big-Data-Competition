@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""运移模型工具：Voellmy 一维（正确的阻力项 a = g sinθ - μg cosθ - g v²/(ξh)）"""
+"""运移模型工具:Voellmy 一维(正确的阻力项 a = g sinθ - μg cosθ - g v²/(ξh))"""
 import numpy as np
 
 G = 9.81

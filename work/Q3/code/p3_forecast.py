@@ -74,7 +74,8 @@ def d8_path(z, start, goal, stop_r=3, max_steps=40000):
 
 
 def nearest_on_path(path, point, cell=(1.0, 1.0)):
-    """路径上离 point 最近的像元：返回 (索引, 米制距离)
+    """
+    路径上离 point 最近的像元：返回 (索引, 米制距离)
 
     cell = (行方向像元边长, 列方向像元边长)，单位米，用于把行列号换算成米。
     """
@@ -119,7 +120,7 @@ from voellmy import run_voellmy, calibrate_mu
 mu_cal = calibrate_mu(zz, dd)
 t_cal, v_cal, ok_cal = run_voellmy(zz, dd, mu=mu_cal)
 print('\nVoellmy 标定：μ = %.4f(H/L = %.4f)，ξ=1000、h=8 m、入口速度 15 m/s' % (mu_cal, HL))
-print('  到达口岸 %s，耗时 %.1f 分钟，峰值速度 %.1f m/s，抵达速度 %.1f m/s'
+print('  到达口岸 %s,耗时 %.1f 分钟，峰值速度 %.1f m/s，抵达速度 %.1f m/s'
       % (ok_cal, t_cal[-1] / 60, v_cal.max(), v_cal[-1]))
 
 N = 2000
@@ -149,7 +150,7 @@ print('\nDDF = %.2f mm/(℃·d)，年均融水 %.0f mm' % (DDF0, annual_melt))
 
 obs = {y: trigger_date(pdd_by_year[y], DDF0, annual_melt, 0.70) for y in range(2021, 2026)}
 
-print('\n=== 覆盖率回测(留一年外,400 次集合)===')
+print('\n覆盖率回测(留一年外,400 次集合)')
 rows, hit = [], 0
 for y in range(2021, 2026):
     others = [z for z in range(2021, 2026) if z != y]

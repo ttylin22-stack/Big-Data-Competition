@@ -57,7 +57,7 @@ fig.tight_layout()
 fig.savefig(os.path.join(FIG, 'p4_fig1_inundation.png'), dpi=160)
 plt.close(fig)
 
-# ---- 图 2：到达时间场（中心线加粗，避免在 35 km 幅面上"看不见"）----
+# 图 2：到达时间场（中心线加粗，避免在 35 km 幅面上神秘失踪）
 fig, ax = plt.subplots(figsize=(8.2, 7.4))
 ax.imshow(hs, cmap='gray', extent=ext, origin='upper')
 
