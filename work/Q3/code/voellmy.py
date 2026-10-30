@@ -39,7 +39,7 @@ def run_voellmy(z, s_km, mu=0.05, xi=1000.0, hflow=8.0, v0=15.0, ds=20.0, vmin=1
     return np.array(ts), np.array(vs), True
 
 def calibrate_mu(z, s_km, xi=1000.0, hflow=8.0, v0=15.0):
-    """二分搜索 μ，使流动恰好到达终点（runout 校准）"""
+    """二分搜索 μ,使流动恰好到达终点(runout 校准)"""
     lo, hi = 0.005, 0.30
     for _ in range(30):
         mid = 0.5 * (lo + hi)

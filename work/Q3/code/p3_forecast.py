@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""问题3：预报模型、触发时刻 95% 区间、预警时间、覆盖率、空间距离范围"""
+"""问题3:预报模型、触发时刻 95% 区间、预警时间、覆盖率、空间距离范围"""
 from config import RESOURCES, RESULT, IMAGE, INPUT
 import os, heapq
 import numpy as np
@@ -51,8 +51,8 @@ def rc(lon, lat):
 
 src = rc(85.51046, 28.29555)     # 冰川舌部（.nc 掩膜最低点）
 port = rc(85.37800, 28.27700)    # 吉隆口岸
-print('源区（冰川舌部）栅格 %s，高程 %.0f m' % (src, dem[src]))
-print('口岸栅格 %s，高程 %.0f m' % (port, dem[port]))
+print('源区（冰川舌部）栅格 %s,高程 %.0f m' % (src, dem[src]))
+print('口岸栅格 %s,高程 %.0f m' % (port, dem[port]))
 
 def d8_path(z, start, goal, stop_r=3, max_steps=40000):
     i, j = start
@@ -72,29 +72,42 @@ def d8_path(z, start, goal, stop_r=3, max_steps=40000):
         path.append((i, j))
     return path
 
+
+def nearest_on_path(path, point, cell=(1.0, 1.0)):
+    """路径上离 point 最近的像元：返回 (索引, 米制距离)
+
+    cell = (行方向像元边长, 列方向像元边长)，单位米，用于把行列号换算成米。
+    """
+    pts = np.asarray(path, dtype=float) * np.asarray(cell, dtype=float)
+    target = np.asarray(point, dtype=float) * np.asarray(cell, dtype=float)
+    dist = np.linalg.norm(pts - target, axis=1)
+    k = int(dist.argmin())
+    return k, float(dist[k])
+
+
 path = d8_path(filled, src, port)
 res_x = abs(tr.a) * 111320 * np.cos(np.radians(28.3))
 res_y = abs(tr.e) * 110540
 
-# 路径会越过口岸继续下切到 DEM 边界，按"离口岸最近的像元"截断
-_p = np.array(path)
-_d2 = (_p[:, 0] - port[0]) ** 2 + (_p[:, 1] - port[1]) ** 2
-_k = int(np.argmin(_d2))
-print('\nD8 路径共 %d 像元，离口岸最近的点在第 %d 个（横向偏离 %.0f m）'
-      % (len(_p), _k, np.sqrt(_d2[_k]) * 30))
-path = path[: _k + 1]
+# D8 路径会越过口岸继续下切到 DEM 边界，按"离口岸最近的像元"截断
+k_port, offset_m = nearest_on_path(path, port, cell=(res_y, res_x))
+
+print(f'\nD8 路径共 {len(path)} 像元，离口岸最近的是第 {k_port} 个'
+      f'（横向偏离 {offset_m:.0f} m)')
+
+path = path[: k_port + 1]
 zz = np.array([dem[r, c] for r, c in path])
 dd = np.concatenate([[0], np.cumsum(np.hypot(np.diff([p[0] for p in path]) * res_y,
                                              np.diff([p[1] for p in path]) * res_x))]) / 1000
 _lon0, _lat0 = rasterio.transform.xy(tr, path[0][0], path[0][1])
 _lon1, _lat1 = rasterio.transform.xy(tr, path[-1][0], path[-1][1])
 straight = np.hypot((_lon1 - _lon0) * res_x / abs(tr.a), (_lat1 - _lat0) * res_y / abs(tr.e)) / 1000
-print('沟道（源区→口岸）%d 像元，沿程 %.1f km（直线 %.1f km，曲折度 %.2f）'
+print('沟道（源区→口岸）%d 像元，沿程 %.1f km(直线 %.1f km,曲折度 %.2f)'
       % (len(path), dd[-1], straight, dd[-1] / straight))
-print('  起点 %.0f m → 口岸沟底 %.0f m，落差 %.0f m，H/L = %.3f'
+print('  起点 %.0f m → 口岸沟底 %.0f m,落差 %.0f m,H/L = %.3f'
       % (zz[0], zz[-1], zz[0] - zz[-1], (zz[0] - zz[-1]) / (dd[-1] * 1000)))
-print('  注：口岸台地高程 %.0f m，高出沟底 %.0f m，位于横向 %.0f m 处'
-      % (dem[port], dem[port] - zz[-1], np.sqrt(_d2[_k]) * 30))
+print(f'  注：口岸台地高程 {dem[port]:.0f} m,高出沟底 {dem[port] - zz[-1]:.0f} m,'
+      f'位于横向 {offset_m:.0f} m 处')
 
 # ---- 能量线法：v(s) = sqrt(v0^2 + 2g(Δz(s) - μ s)) ----
 HL = (zz[0] - zz[-1]) / (dd[-1] * 1000)
@@ -105,7 +118,7 @@ from voellmy import run_voellmy, calibrate_mu
 
 mu_cal = calibrate_mu(zz, dd)
 t_cal, v_cal, ok_cal = run_voellmy(zz, dd, mu=mu_cal)
-print('\nVoellmy 标定：μ = %.4f（H/L = %.4f），ξ=1000、h=8 m、入口速度 15 m/s' % (mu_cal, HL))
+print('\nVoellmy 标定：μ = %.4f(H/L = %.4f)，ξ=1000、h=8 m、入口速度 15 m/s' % (mu_cal, HL))
 print('  到达口岸 %s，耗时 %.1f 分钟，峰值速度 %.1f m/s，抵达速度 %.1f m/s'
       % (ok_cal, t_cal[-1] / 60, v_cal.max(), v_cal[-1]))
 
@@ -118,7 +131,7 @@ for _ in range(N):
     if ok:
         tau.append(t[-1] / 60.0)
 tau = np.array(tau)
-print('到达时间集合：5–95%% = %.1f–%.1f 分钟（中位 %.1f，%d/%d 次能到达）'
+print('到达时间集合:5 - 95%% = %.1f - %.1f 分钟（中位 %.1f,%d/%d 次能到达）'
       % (np.percentile(tau, 5), np.percentile(tau, 95), np.median(tau), len(tau), N))
 
 # ---- 触发时刻 ----
@@ -136,7 +149,7 @@ print('\nDDF = %.2f mm/(℃·d)，年均融水 %.0f mm' % (DDF0, annual_melt))
 
 obs = {y: trigger_date(pdd_by_year[y], DDF0, annual_melt, 0.70) for y in range(2021, 2026)}
 
-print('\n=== 覆盖率回测（留一年外，400 次集合）===')
+print('\n=== 覆盖率回测(留一年外,400 次集合)===')
 rows, hit = [], 0
 for y in range(2021, 2026):
     others = [z for z in range(2021, 2026) if z != y]
@@ -154,7 +167,7 @@ for y in range(2021, 2026):
     hit += cov
     rows.append({'year': y, 'obs': obs[y].date(), 'lo': lo.date(), 'hi': hi.date(),
                  'width_days': (hi - lo).days, 'covered': bool(cov)})
-    print('  %d: 观测 %s，区间 %s ~ %s（宽 %d 天）%s'
+    print('  %d: 观测 %s,区间 %s ~ %s(宽 %d 天)%s'
           % (y, obs[y].date(), lo.date(), hi.date(), (hi - lo).days, '命中' if cov else '未覆盖'))
 coverage = hit / 5
 print('  覆盖率 %d/5 = %.0f%%，平均区间宽度 %.0f 天'
@@ -170,9 +183,9 @@ arr = np.array([t.timestamp() for t in sims])
 lo26 = pd.Timestamp(np.percentile(arr, 2.5), unit='s')
 hi26 = pd.Timestamp(np.percentile(arr, 97.5), unit='s')
 med26 = pd.Timestamp(np.median(arr), unit='s')
-print('\n2026 触发时刻 95%% 区间：%s ~ %s（中位 %s，宽 %d 天）'
+print('\n2026 触发时刻 95%% 区间：%s ~ %s(中位 %s,宽 %d 天)'
       % (lo26.date(), hi26.date(), med26.date(), (hi26 - lo26).days))
-print('  实际事件 %s，%s区间内（位于第 %.0f 百分位）'
+print('  实际事件 %s,%s区间内(位于第 %.0f 百分位)'
       % (EVENT.date(), '在' if lo26 <= EVENT <= hi26 else '不在',
          np.mean(arr <= EVENT.timestamp()) * 100))
 lead = (EVENT - med26).days
@@ -197,4 +210,4 @@ summary = {
 }
 pd.DataFrame([summary]).T.rename(columns={0: '值'}).rename_axis('指标').to_csv(
     os.path.join(OUT, 'p3_summary.csv'), encoding='utf-8-sig')
-print('\n摘要：', summary)
+print('\n摘要:', summary)

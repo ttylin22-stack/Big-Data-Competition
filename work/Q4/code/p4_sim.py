@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""问题4：能量线—侧向扩散仿真（沿沟道能量线 + 侧向影响宽度），输出水深/到达时间/范围"""
+"""问题4:能量线—侧向扩散仿真(沿沟道能量线 + 侧向影响宽度)，输出水深/到达时间/范围"""
 from config import RESOURCES, RESULT, IMAGE, INPUT
 import os
 import numpy as np
@@ -59,7 +59,7 @@ z_path = np.interp(s_cell, prof['dist_km'].values, prof['elev_m'].values)
 above = dem - z_path
 affected = ((d_lat <= width) & (dem <= energy) & np.isfinite(dem)
             & (above <= np.maximum(2.0 * h_s, 5.0)))
-print('视摩擦角 μ_E = %.4f（%.1f°）' % (HL, np.degrees(np.arctan(HL))))
+print('视摩擦角 μ_E = %.4f(%.1f°)' % (HL, np.degrees(np.arctan(HL))))
 
 lateral = np.clip(1.0 - (d_lat / np.maximum(width, 1.0)) ** 2, 0, 1)
 depth = np.where(affected, h_s * lateral, 0.0)
@@ -71,12 +71,12 @@ t_cum = np.concatenate([[0.0], np.cumsum(np.diff(s_m) / (0.5 * (vv[1:] + vv[:-1]
 arrive = np.where(affected, np.interp(s_cell, vel['dist_km'].values, t_cum), np.nan)
 
 rp, cp = rasterio.transform.rowcol(tr, 85.3780, 28.2770)
-print('口岸栅格 (%d,%d) 高程 %.0f m：水深 %.1f m，到达 %.1f min，受影响 %s'
+print('口岸栅格 (%d,%d) 高程 %.0f m:水深 %.1f m,到达 %.1f min,受影响 %s'
       % (rp, cp, dem[rp, cp], depth[rp, cp], arrive[rp, cp], bool(affected[rp, cp])))
 
 cell_km2 = abs(tr.a * tr.e) * MX * MY / 1e6
 area = affected.sum() * cell_km2
-print('影响面积 %.2f km2，最大水深 %.1f m，到达时间 %.1f–%.1f min'
+print('影响面积 %.2f km2,最大水深 %.1f m,到达时间 %.1f - %.1f min'
       % (area, depth.max(), np.nanmin(arrive), np.nanmax(arrive)))
 
 rows = []

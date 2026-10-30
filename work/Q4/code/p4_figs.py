@@ -50,7 +50,7 @@ cb.set_label('最大水深 (m)')
 ax.set_xlabel('经度'); ax.set_ylabel('纬度')
 _cell = ((b.right-b.left)/dem.shape[1]*111320*np.cos(np.radians(28.4))) * ((b.top-b.bottom)/dem.shape[0]*110540) / 1e6
 _area = float((depth > 0.01).sum()) * _cell
-ax.set_title('碎屑流淹没范围（走廊放大）：%.2f km²，最大水深 %.1f m' % (_area, float(depth.max())))
+ax.set_title('碎屑流淹没范围（走廊放大）：%.2f km²,最大水深 %.1f m' % (_area, float(depth.max())))
 ax.legend(loc='lower left', fontsize=8)
 fig.tight_layout()
 fig.savefig(os.path.join(FIG, 'p4_fig1_inundation.png'), dpi=160)
