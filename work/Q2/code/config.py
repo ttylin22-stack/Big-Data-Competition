@@ -1,11 +1,42 @@
 import os
-#以code文件夹为基点，创建路径ASE
-CODE = os.path.dirname(os.path.abspath(__file__))
-#Q2总目录的相对路径
-Q2 = os.path.dirname(CODE)
-#依次创建剩下几个目录的路径
+
+CODE = os.path.dirname(os.path.abspath(__file__))   # .../work/Q2/code
+Q2 = os.path.dirname(CODE)                          # .../work/Q2
+
 RESULT = os.path.join(Q2, 'result')
 IMAGE = os.path.join(Q2, 'image')
 INPUT = os.path.join(Q2, 'input')
-#resources原始数据路径
-RESOURCES = os.path.abspath(os.path.join(Q2, '..', '..', 'resources'))
+
+
+def _is_data_root(path):
+    """目录里是否含第 1 个数据集（DataSet_1 或 （1）…）"""
+    if not os.path.isdir(path):
+        return False
+    try:
+        names = os.listdir(path)
+    except OSError:
+        return False
+    return any(n.startswith('DataSet_1') or n.startswith('（1）') or n.startswith('(1)')
+               for n in names)
+
+
+def find_resources():
+    """环境变量优先；否则从 Q2 向上最多 8 级找 resources / Resources / 附件。"""
+    for key in ('BDC_RESOURCES', 'GYIRONG_BASE'):
+        env = os.environ.get(key)
+        if env and _is_data_root(env):
+            return os.path.abspath(env)
+
+    p = Q2
+    for _ in range(8):
+        p = os.path.dirname(p)
+        for cand in ('resources', 'Resources', '附件'):
+            c = os.path.join(p, cand)
+            if _is_data_root(c):
+                return c
+
+    # 兜底：Big_Data_Competition/resources
+    return os.path.abspath(os.path.join(Q2, '..', '..', 'resources'))
+
+
+RESOURCES = find_resources()
