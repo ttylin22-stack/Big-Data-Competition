@@ -1,12 +1,4 @@
 # -*- coding: utf-8 -*-
-"""问题2 路径配置
-
-以 code 目录为锚点推导其余目录；resources 用"向上搜索 + 环境变量"两级兜底，
-兼容 `DataSet_1…8` 与 `（1）…（8）` 两套命名（复核意见 6.1）。
-
-可用环境变量覆盖数据根目录：
-    set BDC_RESOURCES=D:\\path\\to\\resources
-"""
 import os
 
 CODE = os.path.dirname(os.path.abspath(__file__))   # .../work/Q2/code
@@ -18,7 +10,6 @@ INPUT = os.path.join(Q2, 'input')
 
 
 def _is_data_root(path):
-    """目录里是否含第 1 个数据集（DataSet_1 或 （1）…）"""
     if not os.path.isdir(path):
         return False
     try:
@@ -30,7 +21,6 @@ def _is_data_root(path):
 
 
 def find_resources():
-    """环境变量优先；否则从 Q2 向上最多 8 级找 resources / Resources / 附件。"""
     for key in ('BDC_RESOURCES', 'GYIRONG_BASE'):
         env = os.environ.get(key)
         if env and _is_data_root(env):

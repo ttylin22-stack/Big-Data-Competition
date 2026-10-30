@@ -1,19 +1,4 @@
 ﻿# -*- coding: utf-8 -*-
-"""问题2（二）：热力阈值、源区异常度、触发指数与时空尺度检验
-
-本文件对应复核意见的修订点：
-  2-1  触发判据改为报告 §4.3 自己声明的三个必要条件
-       （累积融水 ≥ 70% 年量、滞后 25–60 天、当日有融雪），
-       并显式输出事件日是否入窗；TI 降级为连续强度指标，不再当"是否触发"的硬阈值。
-  2-3  事件前 30 天的夜间最低温同时统计台站与源区，落盘 p2_window_tmin.csv。
-  2-5  显式验证 melt_frac = ΣPDD / mean(PDD)，与 DDF 无关。
-  2-6  对"融水高程 5297 m vs 释放点 3619 m"补敏感性，落盘 p2_sensitivity.csv。
-  1-5  对"台站高程 4170 m vs 标准大气 3981 m"补敏感性。
-  2-9  DEM 覆盖范围由仿射变换实算，落盘 p2_dem_meta.csv。
-
-运行环境：numpy / pandas 必需；rasterio / geopandas 只在"冰川排名"与"尺度敏感性"
-两节使用，缺失时会跳过并给出提示，不影响其余结果。
-"""
 import os
 import glob
 
@@ -49,7 +34,6 @@ def load_daily(path=None):
 
 
 def calibrate_ddf(daily, dh=GLACIER_DH):
-    """用观测减薄反算度日因子。注意：所有比例型结论里 DDF 会约掉（见 verify_ddf_cancels）。"""
     src = daily[daily['year'].between(2021, 2025)]
     pdd_annual = src.groupby('year')['PDD_source'].sum()
     pdd_mean = float(pdd_annual.mean())
@@ -59,7 +43,6 @@ def calibrate_ddf(daily, dh=GLACIER_DH):
 
 
 def add_progress(daily, ddf, annual_melt):
-    """按年累计融水、滞后天数、强度指标 TI 与三条件窗口。"""
     daily = daily.copy()
     daily['melt_cum'] = np.nan
     for _, g in daily.groupby('year'):
@@ -87,7 +70,6 @@ def add_progress(daily, ddf, annual_melt):
 
 
 def melt_date_table(daily, ddf, annual_melt):
-    """逐年跨过 60/70/80% 年融水的日期 + 热力峰值日。"""
     rows = []
     for yr in sorted(daily['year'].unique()):
         if yr < 2021:
@@ -104,7 +86,6 @@ def melt_date_table(daily, ddf, annual_melt):
 
 
 def window_table(daily):
-    """逐年高危窗口（三条件同时满足的日期段）。"""
     rows = []
     for yr, g in daily.groupby('year'):
         if yr < 2021:
@@ -117,7 +98,6 @@ def window_table(daily):
 
 
 def tmin_table(daily, event=EVENT, days=30):
-    """事件前 N 天的夜间最低温：台站 vs 源区（源区 = 台站 − 6.5℃/km × 高差）。"""
     w = daily[(daily['date'] > event - pd.Timedelta(days=days)) & (daily['date'] <= event)]
     rows = []
     for name, col in [('台站 2 m', 'T_station_min'), ('源区 5297 m', 'T_source_min')]:
@@ -128,7 +108,6 @@ def tmin_table(daily, event=EVENT, days=30):
 
 
 def verify_ddf_cancels(daily, ddf, annual_melt):
-    """验证 melt_frac 与 DDF 无关：Σ(PDD·DDF)/(mean·DDF) 与 ΣPDD/mean 应当逐日相等。"""
     a = add_progress(daily, ddf, annual_melt)['melt_frac']
     cum = daily.groupby('year')['PDD_source'].cumsum()
     mean = daily[daily['year'].between(2021, 2025)].groupby('year')['PDD_source'].sum().mean()
@@ -163,7 +142,6 @@ def _frac_on(daily, pdd, mean_pdd, date):
 
 
 def elevation_sensitivity(daily, event=EVENT):
-    """换台站海拔 / 换融水高程，看 70% 融水日与事件日进度怎么动。"""
     variants = [
         ('台站4170_源区5297（基准）', STATION_ELEV, SOURCE_ELEV),
         ('台站3981_源区5297（标准大气）', 3981.0, SOURCE_ELEV),

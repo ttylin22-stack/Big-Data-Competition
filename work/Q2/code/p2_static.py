@@ -1,18 +1,4 @@
 ﻿# -*- coding: utf-8 -*-
-"""问题2（一）：历史灾点地形分位区间 + 触发类型构成 + DEM 空间易发性
-
-本文件对应复核意见的修订点：
-  2-2  三个"地形阈值"（沟比降 >0.17 等）实际是灾点自身的 25% 分位数，
-       没有非灾点对照，不能叫临界阈值。改名"历史灾点地形分位区间"，
-       输出改名 p2_terrain_quantiles.csv，并在输出里明确声明这一点；
-       规模判别的 logit（沟比降负系数）提为主结果。
-  2-8  把 `类型` 字段（降雨型/冰水混合型/冰雪融水型/冰湖溃决型）落盘为
-       p2_trigger_type.csv，供"冰水混合机制"论证直接引用。
-  2-4  空间块 CV 显式报告"5 块划分、有效 N 折"，并落盘每折样本数与 AUC。
-
-运行环境：numpy / pandas 必需；geopandas / rasterio / sklearn 缺失时，
-对应小节会跳过并提示，属性类结果（分位区间、触发类型）仍可产出。
-"""
 import os
 import struct
 
@@ -35,7 +21,6 @@ ICE_TYPES = ('冰水混合型', '冰雪融水型', '冰湖溃决型')
 # 1. 读取灾点属性（优先 geopandas，缺失时退化为 DBF 解析）
 # =========================================================
 def read_dbf(path):
-    """极简 dBase III 解析：只取字段值与记录，够读属性表。"""
     with open(path, 'rb') as f:
         raw = f.read()
     nrec, hlen, rlen = struct.unpack('<I H H', raw[4:12])
@@ -67,7 +52,6 @@ def read_dbf(path):
 
 
 def load_points(resources=RESOURCES):
-    """返回带 x/y 的属性表；两种读法数值一致，只影响是否携带几何列。"""
     shp = os.path.join(resources, PT_DIR, PT_SHP)
     dbf = os.path.join(resources, PT_DIR, PT_DBF)
     try:
@@ -111,7 +95,6 @@ def trigger_type_table(pts):
 
 
 def scale_logit(pts):
-    """规模判别：P(规模 ≥ 中) ~ log(沟比降) + log(高差) + log(主沟长)，标准化系数。"""
     try:
         from sklearn.linear_model import LogisticRegression
         from sklearn.metrics import roc_auc_score
@@ -149,7 +132,6 @@ def scale_logit(pts):
 # 3. DEM 空间易发性（rasterio + sklearn）
 # =========================================================
 def box_sum(a, k, h, w):
-    """积分图实现 k×k 邻域均值（边界按有效计数）。"""
     a = np.nan_to_num(a, nan=0.0)
     ii = np.cumsum(np.cumsum(a, 0), 1)
     ii = np.pad(ii, ((1, 0), (1, 0)))

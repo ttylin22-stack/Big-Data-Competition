@@ -5,3 +5,4 @@ __pycache__/
 backup/
 private/
 ##除此之外py应该不会再拉史了，有新的史，或者有不想传的内容，可以在这个文件中标注出来，github desktop就不会传了
+.vs/
