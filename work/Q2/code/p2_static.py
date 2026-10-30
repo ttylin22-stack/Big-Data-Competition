@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 ﻿# -*- coding: utf-8 -*-
 """问题2（一）：历史灾点地形分位区间 + 触发类型构成 + DEM 空间易发性
 
@@ -16,6 +17,10 @@
 import os
 import struct
 
+=======
+# -*- coding: utf-8 -*-
+import os, sys
+>>>>>>> Stashed changes
 import numpy as np
 import pandas as pd
 
@@ -66,6 +71,7 @@ def read_dbf(path):
     raise RuntimeError('DBF 解码失败：%s' % path)
 
 
+<<<<<<< Updated upstream
 def load_points(resources=RESOURCES):
     """返回带 x/y 的属性表；两种读法数值一致，只影响是否携带几何列。"""
     shp = os.path.join(resources, PT_DIR, PT_SHP)
@@ -77,6 +83,22 @@ def load_points(resources=RESOURCES):
     except ImportError:
         pts = read_dbf(dbf)
         print('灾点来源：DBF 解析（未安装 geopandas）')
+=======
+# ---- logit：规模是否≥中 ----
+pts['large'] = pts['规模'].isin(['中', '大', '特大']).astype(int)
+d = pts[['large', '沟比降', '高差', '主沟长', '扇长']].dropna()
+X = np.column_stack([np.log(d['沟比降'].clip(1e-3)), np.log(d['高差'].clip(1)),
+                     np.log(d['主沟长'].clip(1))])
+Xs = StandardScaler().fit_transform(X)
+lr = LogisticRegression(C=1.0, max_iter=2000).fit(Xs, d['large'])
+print('\n=== logit: P(规模≥中) ===')
+for nm, coef in zip(['log 沟比降', 'log 高差', 'log 主沟长'], lr.coef_[0]):
+    print('  %-12s 系数 %+0.3f' % (nm, coef))
+print('  训练集 AUC %.3f (n=%d)' % (roc_auc_score(d['large'], lr.predict_proba(Xs)[:, 1]), len(d)))
+pd.DataFrame({'term': ['const'] + ['log_gradient', 'log_drop', 'log_length'],
+              'coef': [lr.intercept_[0]] + list(lr.coef_[0])}).to_csv(
+    os.path.join(RESULT, 'p2_logit_coef.csv'), index=False, encoding='utf-8-sig')
+>>>>>>> Stashed changes
 
     pts = pd.DataFrame(pts)
     pts['x'] = [float(v) for v in pts['x_coord']]
@@ -85,6 +107,7 @@ def load_points(resources=RESOURCES):
         pts[c] = pd.to_numeric(pts[c], errors='coerce')
     return pts
 
+<<<<<<< Updated upstream
 
 # =========================================================
 # 2. 地形分位区间（原"临界阈值"）
@@ -150,6 +173,9 @@ def scale_logit(pts):
 # =========================================================
 def box_sum(a, k, h, w):
     """积分图实现 k×k 邻域均值（边界按有效计数）。"""
+=======
+def box_sum(a, k):
+>>>>>>> Stashed changes
     a = np.nan_to_num(a, nan=0.0)
     ii = np.cumsum(np.cumsum(a, 0), 1)
     ii = np.pad(ii, ((1, 0), (1, 0)))
