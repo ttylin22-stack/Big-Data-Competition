@@ -1,17 +1,3 @@
-"""0_build_panel.py —— 数据管道：原始逐小时观测 -> 日尺度特征表。
-
-输入：resources/DataSet_1/{MET,RADM,SOIL,FLUX}_Gyirong_YYYY.csv
-输出：result/daily_features.csv      日尺度主表（1 951 天）
-      temporary/washed_and_merged_data.csv  清洗合并后的逐小时表
-      temporary/hourly_panel.csv             派生物理量后的逐小时面板
-
-聚合口径（重要）：
-  通量/辐射类（LE、H、Rn、Rsd、Lnet、G）是"能量速率"，日累积必须对时间积分。
-  直接用 sum 会把缺测小时当成 0，导致缺测多的日子被系统性低估——而 2021-2025
-  的 8-9 月有 20% 的日子整天没有 FLUX 观测。因此这里统一按"有效小时归一化"：
-      sum24 = sum / n_valid * 24,  且要求 n_valid >= MIN_VALID_HOURS(18)
-  降水是真实累积量，仍用 sum（缺测日返回 NaN 而不是 0）。
-"""
 import glob
 import os
 
