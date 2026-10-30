@@ -13,7 +13,7 @@ rng = np.random.default_rng(7)
 daily = pd.read_csv(os.path.join(INPUT, 'daily_features.csv'), parse_dates=['date'])
 EVENT = pd.Timestamp('2026-08-26')
 
-demf = os.path.join(RESOURCES, 'dem', 'DEM.tif')
+demf = os.path.join(RESOURCES, 'DataSet_7', 'DEM.tif')
 with rasterio.open(demf) as s:
     dem = s.read(1).astype('float64')
     dem[dem == s.nodata] = np.nan

@@ -34,7 +34,7 @@ depth, arrive, dem, path = d['depth'], d['arrive'], d['dem'], d['path']
 s_cell = d['s_cell']
 rp, cp = int(d['port'][0]), int(d['port'][1])
 
-with rasterio.open(os.path.join(RESOURCES, 'dem', 'DEM.tif')) as s:
+with rasterio.open(os.path.join(RESOURCES, 'DataSet_7', 'DEM.tif')) as s:
     tr = s.transform
     b = s.bounds
 

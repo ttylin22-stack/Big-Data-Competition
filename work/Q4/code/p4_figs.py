@@ -22,7 +22,7 @@ os.makedirs(FIG, exist_ok=True)
 d = np.load(os.path.join(OUT, 'p4_result.npz'))
 depth, arrive, dem, path = d['depth'], d['arrive'], d['dem'], d['path']
 rp, cp = int(d['port'][0]), int(d['port'][1])
-with rasterio.open(os.path.join(RESOURCES, 'dem', 'DEM.tif')) as s:
+with rasterio.open(os.path.join(RESOURCES, 'DataSet_7', 'DEM.tif')) as s:
     tr = s.transform
     b = s.bounds
 

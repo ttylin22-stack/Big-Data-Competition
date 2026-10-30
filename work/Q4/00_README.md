@@ -58,7 +58,7 @@ python code/p4_figs.py     # 几秒，出图 1–3
 python code/p4_process.py  # 几秒，出图 4–6
 ```
 
-DEM 读 `../resources/dem/DEM.tif`。
+DEM 读 `../resources/DataSet_7/DEM.tif`。
 
 敏感性：`P4_V0=2500000 python code/p4_sim.py` 可改体积（需重跑出图）。
 
