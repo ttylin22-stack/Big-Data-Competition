@@ -68,7 +68,7 @@ python code/p3_figs.py        # 几秒
 ```
 
 
-原始数据读 `../resources/dem/DEM.tif`（即 `Q3/../../resources`），脚本自动定位。
+原始数据读 `../resources/DataSet_7/DEM.tif`（即 `Q3/../../resources`），脚本自动定位。
 
 ---
 
