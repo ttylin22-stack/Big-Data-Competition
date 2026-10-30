@@ -6,22 +6,16 @@ import pandas as pd
 
 from config import RESOURCES, INPUT, RESULT, IMAGE
 
-
 PT_DIR = 'DataSet_6'
 PT_SHP = '西藏日喀则市吉隆县泥石流灾害区历史灾点数据.shp'
 PT_DBF = '西藏日喀则市吉隆县泥石流灾害区历史灾点数据.dbf'
 DEM_DIR = 'DataSet_7'
 
 NUM_COLS = ['沟比降', '高差', '主沟长', '扇宽', '扇长', '沟口H', '高程Max', 'Area', 'DisFrmFlt']
-# 与灾害"冰/雪"相关的触发类型（用于论证冰水混合机制）
+
 ICE_TYPES = ('冰水混合型', '冰雪融水型', '冰湖溃决型')
 
-
-# =========================================================
-# 1. 读取灾点属性（优先 geopandas，缺失时退化为 DBF 解析）
-# =========================================================
 def read_dbf(path):
-    """极简 dBase III 解析：只取字段值与记录，够读属性表。"""
     with open(path, 'rb') as f:
         raw = f.read()
     nrec, hlen, rlen = struct.unpack('<I H H', raw[4:12])
@@ -51,9 +45,7 @@ def read_dbf(path):
             continue
     raise RuntimeError('DBF 解码失败：%s' % path)
 
-
 def load_points(resources=RESOURCES):
-    """返回带 x/y 的属性表；两种读法数值一致，只影响是否携带几何列。"""
     shp = os.path.join(resources, PT_DIR, PT_SHP)
     dbf = os.path.join(resources, PT_DIR, PT_DBF)
     try:
@@ -71,10 +63,6 @@ def load_points(resources=RESOURCES):
         pts[c] = pd.to_numeric(pts[c], errors='coerce')
     return pts
 
-
-# =========================================================
-# 2. 地形分位区间（原"临界阈值"）
-# =========================================================
 def quantile_table(pts):
     q = {}
     for name, col in [('沟比降', '沟比降'), ('高差_m', '高差'), ('主沟长_m', '主沟长')]:
@@ -87,7 +75,6 @@ def quantile_table(pts):
     tab.index.name = '指标'
     return tab
 
-
 def trigger_type_table(pts):
     vc = pts['类型'].value_counts()
     tab = pd.DataFrame({'类型': vc.index, 'n': vc.values})
@@ -95,9 +82,7 @@ def trigger_type_table(pts):
     tab['ice_snow'] = tab['类型'].isin(ICE_TYPES)
     return tab
 
-
 def scale_logit(pts):
-    """规模判别：P(规模 ≥ 中) ~ log(沟比降) + log(高差) + log(主沟长)，标准化系数。"""
     try:
         from sklearn.linear_model import LogisticRegression
         from sklearn.metrics import roc_auc_score
@@ -110,7 +95,6 @@ def scale_logit(pts):
     pts['large'] = pts['规模'].isin(['中', '大', '特大']).astype(int)
     d = pts[['large', '沟比降', '高差', '主沟长']].dropna()
 
-    # 分位区间的用处：先看两类规模在区间上的位置（不构成判据）
     print('\n按规模分组的地形均值：')
     g = pts.groupby('规模')[['沟比降', '高差', '主沟长']].agg(['mean', 'count']).round(3)
     print(g.to_string())
@@ -130,12 +114,7 @@ def scale_logit(pts):
                              'coef': [lr.intercept_[0]] + list(lr.coef_[0])})
     return coef_tab, auc
 
-
-# =========================================================
-# 3. DEM 空间易发性（rasterio + sklearn）
-# =========================================================
 def box_sum(a, k, h, w):
-    """积分图实现 k×k 邻域均值（边界按有效计数）。"""
     a = np.nan_to_num(a, nan=0.0)
     ii = np.cumsum(np.cumsum(a, 0), 1)
     ii = np.pad(ii, ((1, 0), (1, 0)))
@@ -224,7 +203,6 @@ def dem_susceptibility(pts, resources=RESOURCES, n_neg=600, seed=0):
         print('  %-8s %+0.3f' % (nm, c))
     print('  全样本 AUC %.3f' % roc_auc_score(y, lr2.predict_proba(Xs2)[:, 1]))
 
-    # 空间块 CV：显式记录每一折（含被跳过的），复核意见 2-4
     xy_all = np.column_stack([
         np.r_[pos['x'].values[okp], neg_x[okn]] * 111320 * np.cos(np.radians(28.4)),
         np.r_[pos['y'].values[okp], neg_y[okn]] * 110540])
@@ -253,10 +231,6 @@ def dem_susceptibility(pts, resources=RESOURCES, n_neg=600, seed=0):
     coef = pd.DataFrame({'feature': feat_names, 'coef': lr2.coef_[0]})
     return coef, folds
 
-
-# =========================================================
-# 4. 主流程
-# =========================================================
 def main():
     os.makedirs(RESULT, exist_ok=True)
 
@@ -267,7 +241,6 @@ def main():
         if c in pts.columns:
             print(' ', c, pts[c].value_counts().to_dict())
 
-    # --- 2-2：分位区间（不是临界阈值）---
     qt = quantile_table(pts)
     print('\n=== 历史灾点地形分位区间（84 点自身分位数，非临界阈值）===')
     print('说明：没有非灾点对照，任何分位数都能"覆盖"多数灾点，因此不能称为触发阈值；')
@@ -275,7 +248,6 @@ def main():
     print(qt.round(3).to_string())
     qt.to_csv(os.path.join(RESULT, 'p2_terrain_quantiles.csv'), encoding='utf-8-sig')
 
-    # --- 2-8：触发类型 ---
     ttt = trigger_type_table(pts)
     ice_n = int(ttt.loc[ttt['ice_snow'], 'n'].sum())
     print('\n=== 历史灾点触发类型 ===')
@@ -284,13 +256,11 @@ def main():
           % (ice_n, len(pts), 100.0 * ice_n / len(pts)))
     ttt.to_csv(os.path.join(RESULT, 'p2_trigger_type.csv'), index=False, encoding='utf-8-sig')
 
-    # --- 规模判别 logit（主结果）---
     coef_tab, auc = scale_logit(pts)
     if coef_tab is not None:
         coef_tab.to_csv(os.path.join(RESULT, 'p2_logit_coef.csv'),
                         index=False, encoding='utf-8-sig')
 
-    # --- DEM 空间易发性 ---
     dem_coef, folds = dem_susceptibility(pts)
     if dem_coef is not None:
         dem_coef.to_csv(os.path.join(RESULT, 'p2_dem_logit.csv'),
@@ -301,7 +271,6 @@ def main():
             os.path.join(RESULT, 'p2_blockcv.csv'), index=False, encoding='utf-8-sig')
 
     print('\n完成：结果写入', RESULT)
-
 
 if __name__ == '__main__':
     main()
