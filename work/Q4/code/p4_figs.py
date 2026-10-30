@@ -9,6 +9,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.colors import LightSource
+from matplotlib.collections import LineCollection
 
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei']
 plt.rcParams['axes.unicode_minus'] = False
@@ -21,7 +22,7 @@ os.makedirs(FIG, exist_ok=True)
 d = np.load(os.path.join(OUT, 'p4_result.npz'))
 depth, arrive, dem, path = d['depth'], d['arrive'], d['dem'], d['path']
 rp, cp = int(d['port'][0]), int(d['port'][1])
-with rasterio.open(os.path.join(RESOURCES, 'DataSet_7', 'DEM.tif')) as s:
+with rasterio.open(os.path.join(RESOURCES, 'dem', 'DEM.tif')) as s:
     tr = s.transform
     b = s.bounds
 
@@ -56,16 +57,46 @@ fig.tight_layout()
 fig.savefig(os.path.join(FIG, 'p4_fig1_inundation.png'), dpi=160)
 plt.close(fig)
 
+# ---- 图 2：到达时间场（中心线加粗，避免在 35 km 幅面上"看不见"）----
 fig, ax = plt.subplots(figsize=(8.2, 7.4))
 ax.imshow(hs, cmap='gray', extent=ext, origin='upper')
+
+t_max = float(np.nanmax(ac))
 am = np.ma.masked_where(np.isnan(ac) | (ac <= 0), ac)
-im = ax.imshow(am, cmap='viridis', extent=ext, origin='upper', alpha=0.85, vmin=0, vmax=23)
-ax.plot(ext[0] + (pc + 0.5) * tr.a, ext[3] + (pr + 0.5) * tr.e, color='w', lw=0.7, alpha=0.8)
-ax.plot(ext[0] + (cp - c0 + 0.5) * tr.a, ext[3] + (rp - r0 + 0.5) * tr.e, '*', color='r', ms=15)
+im = ax.imshow(am, cmap='viridis', extent=ext, origin='upper',
+               alpha=0.55, vmin=0, vmax=round(t_max))
+
+# 中心线：位置由沟道像元给出，颜色由该像元的到达时间给出
+xs_line = ext[0] + (pc + 0.5) * tr.a
+ys_line = ext[3] + (pr + 0.5) * tr.e
+s_line = np.asarray(d['s_cell'], float)[path[:, 0], path[:, 1]]
+t_line = np.asarray(d['arrive'], float)[path[:, 0], path[:, 1]]
+ok_line = np.isfinite(t_line)
+if ok_line.sum() >= 2:
+    t_line = np.interp(s_line, s_line[ok_line], t_line[ok_line])
+
+pts = np.column_stack([xs_line, ys_line])
+segs = np.stack([pts[:-1], pts[1:]], axis=1)
+
+ax.plot(xs_line, ys_line, color='k', lw=5.0, alpha=0.55,
+        solid_capstyle='round', zorder=3)
+lc = LineCollection(segs, cmap='viridis',
+                    norm=mcolors.Normalize(0, round(t_max)),
+                    linewidths=3.0, zorder=4)
+lc.set_array(0.5 * (t_line[:-1] + t_line[1:]))
+ax.add_collection(lc)
+
+ax.plot(xs_line[0], ys_line[0], '^', color='#2ca02c', ms=11,
+        mec='k', zorder=5, label='释放区')
+ax.plot(ext[0] + (cp - c0 + 0.5) * tr.a, ext[3] + (rp - r0 + 0.5) * tr.e,
+        '*', color='r', ms=17, mec='k', zorder=5, label='口岸（台地，未淹没）')
+
 cb = fig.colorbar(im, ax=ax, shrink=0.8, pad=0.02)
 cb.set_label('到达时间 (min)')
 ax.set_xlabel('经度'); ax.set_ylabel('纬度')
-ax.set_title('到达时间场：释放区 0 min → 口岸 16 min')
+ax.set_title(f'到达时间场：0–{t_max:.0f} 分钟'
+             f'（粗线为沟道中心线，浅带为影响范围）', fontsize=10)
+ax.legend(loc='lower left', fontsize=8)
 fig.tight_layout()
 fig.savefig(os.path.join(FIG, 'p4_fig2_arrival.png'), dpi=160)
 plt.close(fig)

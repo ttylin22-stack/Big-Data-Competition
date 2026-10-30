@@ -58,7 +58,7 @@ python code/p3_forecast.py    # 约 2 分钟（填洼 + 两次蒙特卡洛）
 python code/p3_figs.py        # 几秒
 ```
 
-原始数据读 `../resources/DataSet_7/DEM.tif`（即 `Q3/../../resources`），脚本自动定位。
+原始数据读 `../resources/dem/DEM.tif`（即 `Q3/../../resources`），脚本自动定位。
 
 ---
 
