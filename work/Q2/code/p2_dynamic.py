@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 ﻿# -*- coding: utf-8 -*-
 """问题2（二）：热力阈值、源区异常度、触发指数与时空尺度检验
 
@@ -14,6 +15,9 @@
 运行环境：numpy / pandas 必需；rasterio / geopandas 只在"冰川排名"与"尺度敏感性"
 两节使用，缺失时会跳过并给出提示，不影响其余结果。
 """
+=======
+# -*- coding: utf-8 -*-
+>>>>>>> Stashed changes
 import os
 import glob
 
